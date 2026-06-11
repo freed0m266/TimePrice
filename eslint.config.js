@@ -33,10 +33,12 @@ export default tseslint.config(
     },
   },
 
-  // Svelte (popup/options UI only).
+  // Svelte (popup/options UI only). Covers `.svelte` components and `.svelte.ts`/.js
+  // runes modules — both go through the Svelte parser, with the TS parser nested so
+  // type syntax inside them is understood.
   ...svelte.configs.recommended,
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
