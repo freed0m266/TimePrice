@@ -1,0 +1,11 @@
+.output
+.wxt
+node_modules
+public
+pnpm-lock.yaml
+coverage
+
+# Human-authored docs and roadmap — not machine-formatted.
+tasks
+.claude
+*.md

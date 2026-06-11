@@ -1,0 +1,5 @@
+# pnpm 10+ blocks dependency build scripts by default; opt in explicitly.
+# esbuild's postinstall sets up its native binary (used by Vite/WXT).
+allowBuilds:
+  esbuild: true
+  spawn-sync: false

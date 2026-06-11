@@ -8,6 +8,9 @@ node_modules/
 .wxt/
 dist/
 *.zip
+stats.html
+stats-*.json
+web-ext.config.ts
 
 # Vite / cache
 .vite/
