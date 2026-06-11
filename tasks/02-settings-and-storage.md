@@ -1,6 +1,6 @@
 # 02 — Settings model + storage layer (`chrome.storage.sync`)
 
-**Status:** Todo
+**Status:** Done — 2026-06-11
 
 **Priorita:** v1.0 · **Úsilí:** S · **Dopad:** Blokující
 
