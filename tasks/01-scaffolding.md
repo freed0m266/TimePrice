@@ -1,6 +1,6 @@
 # 01 — Scaffolding: WXT projekt, TypeScript, Svelte, lint, Vitest
 
-**Status:** Todo
+**Status:** Done — 2026-06-11
 
 **Priorita:** v1.0 · **Úsilí:** M · **Dopad:** Blokující
 
