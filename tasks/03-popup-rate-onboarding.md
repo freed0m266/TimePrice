@@ -1,6 +1,6 @@
 # 03 — Popup: onboarding sazby + live preview (Svelte)
 
-**Status:** Todo
+**Status:** Done — 2026-06-11
 
 **Priorita:** v1.0 · **Úsilí:** M · **Dopad:** Vysoký
 
