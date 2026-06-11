@@ -1,34 +1,53 @@
 <script lang="ts">
-  import { version } from '../../package.json';
+  import CompactView from './CompactView.svelte';
+  import OnboardingView from './OnboardingView.svelte';
+  import { settings } from './settings.svelte';
+
+  // The view is driven by an explicit mode, not directly by `netHourlyRateCzk`, so that
+  // typing/saving a rate during onboarding doesn't yank the user into the compact view
+  // mid-edit. Initial mode is decided once, the first time settings finish loading.
+  let mode = $state<'edit' | 'compact' | null>(null);
+
+  $effect(() => {
+    if (mode === null && settings.loaded) {
+      mode = settings.current.netHourlyRateCzk === null ? 'edit' : 'compact';
+    }
+  });
 </script>
 
 <main>
-  <h1>TimePrice</h1>
-  <p class="version">v{version}</p>
-  <p class="hint">Nastavení sazby přijde v tasku 03.</p>
+  <header>
+    <h1>TimePrice</h1>
+  </header>
+
+  {#if !settings.loaded || mode === null}
+    <p class="loading" aria-busy="true">…</p>
+  {:else if mode === 'edit'}
+    <OnboardingView onDone={() => (mode = 'compact')} />
+  {:else}
+    <CompactView onChangeRate={() => (mode = 'edit')} />
+  {/if}
 </main>
 
 <style>
   main {
-    padding: 1rem 1.25rem;
-    text-align: center;
+    padding: 1rem 1.1rem 1.25rem;
+  }
+
+  header {
+    margin-bottom: 1rem;
   }
 
   h1 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
-  .version {
-    margin: 0.25rem 0 1rem;
-    font-size: 0.85rem;
-    opacity: 0.6;
-  }
-
-  .hint {
+  .loading {
     margin: 0;
-    font-size: 0.9rem;
-    opacity: 0.8;
+    text-align: center;
+    color: var(--tp-fg-muted);
   }
 </style>

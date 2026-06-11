@@ -1,3 +1,5 @@
+/* Popup theme tokens. Light by default, dark via prefers-color-scheme. The popup is a
+   fixed ~320px column; everything else inherits these CSS variables. */
 :root {
   font-family:
     system-ui,
@@ -6,9 +8,44 @@
     Roboto,
     sans-serif;
   color-scheme: light dark;
+
+  --tp-bg: #ffffff;
+  --tp-fg: #1a1a1a;
+  --tp-fg-muted: #666b73;
+  --tp-surface: #f6f6f7;
+  --tp-surface-hover: #ededef;
+  --tp-border: #d6d6db;
+  --tp-accent: #2563eb;
+  --tp-accent-hover: #1d4ed8;
+  --tp-accent-fg: #ffffff;
+  --tp-danger: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tp-bg: #1e1e20;
+    --tp-fg: #e8e8ea;
+    --tp-fg-muted: #a1a1aa;
+    --tp-surface: #2a2a2d;
+    --tp-surface-hover: #34343a;
+    --tp-border: #3f3f46;
+    --tp-accent: #3b82f6;
+    --tp-accent-hover: #60a5fa;
+    --tp-accent-fg: #ffffff;
+    --tp-danger: #f87171;
+  }
 }
 
 body {
   margin: 0;
-  min-width: 280px;
+  width: 320px;
+  background: var(--tp-bg);
+  color: var(--tp-fg);
+}
+
+/* Native number input spinners add visual noise in such a narrow field. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
 }
