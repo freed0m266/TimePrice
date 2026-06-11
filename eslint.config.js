@@ -71,5 +71,18 @@ export default tseslint.config(
     },
   },
 
+  // Settings layer runs in the popup AND the service worker, where there is no DOM.
+  // Guard against accidental DOM access so the storage wrapper stays SW-safe.
+  {
+    files: ['src/settings/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'document', message: 'src/settings runs in the service worker — no DOM.' },
+        { name: 'window', message: 'src/settings runs in the service worker — no DOM.' },
+      ],
+    },
+  },
+
   prettier,
 );
