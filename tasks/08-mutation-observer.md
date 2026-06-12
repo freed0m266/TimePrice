@@ -1,6 +1,6 @@
 # 08 — MutationObserver + idempotentní guard (SPA, infinite scroll)
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** L · **Dopad:** Blokující
 
