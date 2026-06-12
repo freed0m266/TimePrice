@@ -16,7 +16,9 @@ export default defineConfig({
     name: 'TimePrice',
     description: 'Převádí ceny v e-shopech na čas, který musíš odpracovat, abys na ně vydělal.',
     version: '0.1.0',
-    // Minimal permissions: storage only. No tabs/scripting/webNavigation (see task 12).
-    permissions: ['storage'],
+    // Minimal permissions. `storage` for settings; `activeTab` lets the popup read the
+    // active tab's URL (for the per-site toggle, task 09) only after the user opens it —
+    // no broad `tabs`/`scripting`/`webNavigation`. Final review of permissions is task 12.
+    permissions: ['storage', 'activeTab'],
   },
 });

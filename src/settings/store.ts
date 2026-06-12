@@ -7,7 +7,7 @@
 // explicit migration.
 
 import { browser } from 'wxt/browser';
-import { BUILTIN_BLOCKLIST } from './blocklist';
+import { isBuiltinBlocked } from './blocklist';
 import { registrableDomain } from './domain';
 import { DEFAULT_SETTINGS, type AppSettings, type Rounding, type SiteState } from './schema';
 
@@ -62,7 +62,10 @@ export function isHostActive(settings: AppSettings, host: string): boolean {
   if (!settings.enabled) return false;
   const domain = registrableDomain(host);
   if (domain === '') return false;
-  if (BUILTIN_BLOCKLIST.includes(domain)) return false;
+  // Built-in sensitive-domain gate: hard, not user-overridable (task 09 security default).
+  if (isBuiltinBlocked(domain)) return false;
+  // User blocklist: a future options page may populate this; in the MVP the per-site "off"
+  // override below is the only UI that turns a domain off, and it covers the everyday need.
   if (settings.blocklist.includes(domain)) return false;
   if (settings.siteOverrides[domain] === 'off') return false;
   return true;

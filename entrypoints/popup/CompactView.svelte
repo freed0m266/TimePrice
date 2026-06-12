@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { isBuiltinBlocked } from '@/settings/blocklist';
+  import { registrableDomain } from '@/settings/domain';
   import Button from '@/ui/Button.svelte';
   import Toggle from '@/ui/Toggle.svelte';
+  import { getActiveTabHost } from './activeTab';
   import { settings } from './settings.svelte';
   import { STRINGS } from './strings';
 
@@ -13,6 +17,41 @@
   const t = STRINGS.compact;
 
   const rateText = $derived(settings.current.netHourlyRateCzk?.toLocaleString('cs-CZ') ?? '—');
+
+  // Active tab → per-site toggle. `host` is null until resolved or when there is no web page
+  // to target (chrome://, extension pages); `hostResolved` gates the UI so it doesn't flash.
+  let host = $state<string | null>(null);
+  let hostResolved = $state(false);
+  onMount(async () => {
+    host = await getActiveTabHost();
+    hostResolved = true;
+  });
+
+  const domain = $derived(host ? registrableDomain(host) : '');
+  const blocked = $derived(domain !== '' && isBuiltinBlocked(domain));
+  // Per-site state defaults to "on" (absent override). Global off and the built-in blocklist
+  // both force it off and disable the control — the hierarchy is global → blocklist → site.
+  const siteOff = $derived(domain !== '' && settings.current.siteOverrides[domain] === 'off');
+  const siteEnabled = $derived(settings.current.enabled && !blocked && !siteOff);
+
+  /** Write the per-site override. Enabling deletes the key so the map stays tidy (default-on). */
+  function setSiteEnabled(enabled: boolean): void {
+    if (domain === '') return;
+    const next = { ...settings.current.siteOverrides };
+    if (enabled) delete next[domain];
+    else next[domain] = 'off';
+    settings.patch({ siteOverrides: next });
+  }
+
+  const perSiteHint = $derived(
+    blocked
+      ? t.perSiteBlockedHint
+      : !settings.current.enabled
+        ? t.perSiteGlobalOffHint
+        : siteEnabled
+          ? t.perSiteOnHint
+          : t.perSiteOffHint,
+  );
 </script>
 
 <section>
@@ -35,12 +74,24 @@
       {settings.current.enabled ? t.globalToggleHint : t.globalOffHint}
     </p>
 
-    <!-- Per-site control is wired up in task 09; reserve the space with a disabled
-         placeholder so the compact layout doesn't shift later. -->
-    <div class="placeholder">
-      <Toggle id="tp-persite" label={t.perSiteToggle} checked={false} disabled />
-      <p class="badge">{t.perSitePlaceholder}</p>
-    </div>
+    <!-- Per-site toggle: turn TimePrice off/on for just the active tab's domain. Disabled
+         (and forced off) when global is off or the domain is on the built-in blocklist. -->
+    {#if hostResolved}
+      <div class="per-site">
+        {#if domain === ''}
+          <p class="hint">{t.perSiteNoHostHint}</p>
+        {:else}
+          <Toggle
+            id="tp-persite"
+            label={`${t.perSitePrefix} ${domain}`}
+            checked={siteEnabled}
+            disabled={blocked || !settings.current.enabled}
+            onchange={setSiteEnabled}
+          />
+          <p class="hint">{perSiteHint}</p>
+        {/if}
+      </div>
+    {/if}
   </div>
 </section>
 
@@ -90,22 +141,12 @@
     color: var(--tp-fg-muted);
   }
 
-  .placeholder {
+  .per-site {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.3rem;
     margin-top: 0.3rem;
-  }
-
-  .badge {
-    margin: 0;
-    align-self: flex-start;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--tp-fg-muted);
-    border: 1px solid var(--tp-border);
-    border-radius: 999px;
-    padding: 0.12rem 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--tp-border);
   }
 </style>

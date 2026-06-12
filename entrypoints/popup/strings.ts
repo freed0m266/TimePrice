@@ -22,9 +22,15 @@ export const STRINGS = {
     rateSuffix: 'Kč/h',
     change: 'Změnit',
     globalToggle: 'TimePrice zapnutý',
-    globalToggleHint: 'Na tomhle webu uvidíš čas místo cen.',
+    globalToggleHint: 'Na webech uvidíš čas místo cen.',
     globalOffHint: 'Vypnuto — ceny se nepřevádějí nikde.',
-    perSiteToggle: 'Vypnout na téhle doméně',
-    perSitePlaceholder: 'přijde v dalším kroku',
+    // Per-site toggle. The label gets the domain appended, e.g. "TimePrice na alza.cz".
+    perSitePrefix: 'TimePrice na',
+    perSiteOnHint: 'Na téhle doméně se ceny převádějí na čas.',
+    perSiteOffHint: 'Na téhle doméně je převod vypnutý.',
+    perSiteGlobalOffHint: 'Nejdřív zapni TimePrice globálně.',
+    perSiteBlockedHint:
+      'Tady je TimePrice vypnutý z bezpečnostních důvodů (banka, platby nebo státní správa).',
+    perSiteNoHostHint: 'Otevři e-shop a tady ho budeš moct vypnout jen pro něj.',
   },
 } as const;

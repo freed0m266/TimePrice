@@ -174,6 +174,32 @@ describe('isHostActive (pure)', () => {
   });
 });
 
+describe('built-in blocklist gate', () => {
+  it('blocks a bank even when globally enabled (matched on registrable domain)', () => {
+    expect(DEFAULT_SETTINGS.enabled).toBe(true);
+    expect(isHostActive(DEFAULT_SETTINGS, 'internetbanking.csas.cz')).toBe(false);
+  });
+
+  it('blocks the whole gov.cz namespace by suffix', () => {
+    expect(isHostActive(DEFAULT_SETTINGS, 'nieco.gov.cz')).toBe(false);
+    expect(isHostActive(DEFAULT_SETTINGS, 'nia.gov.cz')).toBe(false);
+  });
+
+  it('cannot be overridden on by a per-site "on" (built-in gate is hard)', () => {
+    const settings = { ...DEFAULT_SETTINGS, siteOverrides: { 'csas.cz': 'on' as const } };
+    expect(isHostActive(settings, 'www.csas.cz')).toBe(false);
+  });
+
+  it('still runs on an ordinary shop', () => {
+    expect(isHostActive(DEFAULT_SETTINGS, 'www.alza.cz')).toBe(true);
+  });
+
+  it('is reflected by the async isActiveForHost too', async () => {
+    expect(await isActiveForHost('platebnibrana.gopay.com')).toBe(false);
+    expect(await isActiveForHost('www.alza.cz')).toBe(true);
+  });
+});
+
 describe('registrableDomain', () => {
   it('strips subdomains to the last two labels', () => {
     expect(registrableDomain('www.alza.cz')).toBe('alza.cz');

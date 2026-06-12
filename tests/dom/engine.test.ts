@@ -50,6 +50,7 @@ vi.mock('wxt/browser', () => ({
 }));
 
 import { run } from '@/content/index';
+import { registrableDomain } from '@/settings/domain';
 import { saveSettings } from '@/settings/store';
 
 // `onSettingsChanged` reacts via `loadSettings().then(...)`, so a settings write takes a few
@@ -120,6 +121,26 @@ describe('content engine — activation lifecycle', () => {
     expect(document.querySelectorAll('[data-timeprice]')).toHaveLength(0);
 
     await saveSettings({ enabled: true });
+    await settle();
+    expect(document.body.textContent).toBe('30 h');
+  });
+
+  it('reverts live when the active domain is turned off per-site, and re-applies when back on', async () => {
+    await saveSettings({ netHourlyRateCzk: 1000 });
+    document.body.innerHTML = '<span>30 000 Kč</span>';
+
+    teardown = await run();
+    expect(document.body.textContent).toBe('30 h');
+
+    // Key the override on the real registrable domain of the jsdom location, so the test
+    // doesn't hardcode the test-runner's URL.
+    const domain = registrableDomain(location.host);
+    await saveSettings({ siteOverrides: { [domain]: 'off' } });
+    await settle();
+    expect(document.body.textContent).toBe('30 000 Kč'); // reverted, no reload
+    expect(document.querySelectorAll('[data-timeprice]')).toHaveLength(0);
+
+    await saveSettings({ siteOverrides: {} }); // back to default-on
     await settle();
     expect(document.body.textContent).toBe('30 h');
   });
