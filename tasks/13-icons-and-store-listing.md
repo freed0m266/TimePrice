@@ -1,6 +1,6 @@
 # 13 — Ikony + Chrome Web Store listing assets
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** S · **Dopad:** Střední (blokuje publikaci)
 
