@@ -19,9 +19,10 @@ import { isHostActive, loadSettings, onSettingsChanged } from '@/settings/store'
 import type { AppSettings } from '@/settings/schema';
 import type { ConversionContext } from '@core/convert';
 
+import { adapterScan } from './adapters/engine';
+import { getAdapter } from './adapters/registry';
 import { applyAll, reformatAll, revertAll } from './mutator';
 import { startObserving } from './observer';
-import { scan } from './scanner';
 
 /**
  * Activate TimePrice on the current page and keep it live until the returned teardown is
@@ -34,9 +35,14 @@ export async function run(): Promise<() => void> {
   let active = false;
   let stopObserver: (() => void) | null = null;
 
+  // The site adapter is fixed by the host for the page's lifetime (task 10). `null` (no
+  // adapter / unsupported domain) drives the generic engine; a supported domain narrows the
+  // scan to its price selectors with a stale-markup fallback to generic.
+  const adapter = getAdapter(location.host);
+
   const activate = (): void => {
-    applyAll(scan(), ctx); // first pass before observing, so it isn't a self-mutation race
-    stopObserver = startObserving(ctx);
+    applyAll(adapterScan(adapter), ctx); // first pass before observing, so it isn't a self-mutation race
+    stopObserver = startObserving(ctx, adapter);
     active = true;
   };
 
@@ -65,7 +71,7 @@ export async function run(): Promise<() => void> {
         // subtree it converts from now on uses the new rate too.
         stopObserver?.();
         reformatAll(ctx);
-        stopObserver = startObserving(ctx);
+        stopObserver = startObserving(ctx, adapter);
       }
     }
   });

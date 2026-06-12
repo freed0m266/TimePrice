@@ -20,17 +20,25 @@
 
 import type { ConversionContext } from '@core/convert';
 
+import { adapterScan } from './adapters/engine';
+import type { SiteAdapter } from './adapters/types';
 import { withGuard, isWriting } from './guard';
 import { applyAll } from './mutator';
-import { scan } from './scanner';
 
 /**
  * Start watching `document.body` and converting prices in newly added / changed subtrees,
  * plus re-running a full pass on SPA URL changes. Returns a `stop()` that tears the
  * observer and the `history` patch down. No-op (returns a no-op `stop`) if there is no
  * `document.body` to observe.
+ *
+ * `adapter` (task 10) steers every re-scan through the site adapter: mutations outside the
+ * adapter's price areas are skipped (precision + perf), while a stale adapter degrades to the
+ * generic anchored scan. `null` is the generic engine.
  */
-export function startObserving(ctx: ConversionContext): () => void {
+export function startObserving(
+  ctx: ConversionContext,
+  adapter: SiteAdapter | null = null,
+): () => void {
   if (typeof document === 'undefined' || !document.body) return () => {};
 
   // Subtrees touched since the last frame, scanned in a batch. A `Set` dedupes repeats; the
@@ -128,7 +136,7 @@ export function startObserving(ctx: ConversionContext): () => void {
       () => {
         for (const root of roots) {
           if (!root.isConnected) continue; // dropped before we got to it
-          applyAll(scan({ root }), ctx);
+          applyAll(adapterScan(adapter, root), ctx);
         }
       },
       () => observer.takeRecords(),

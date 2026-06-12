@@ -16,7 +16,8 @@
 // false-positive-prone heuristic and the binding `PriceCandidate` shape models a single
 // text node. Task 10 (site adapters) resolves split prices precisely via CSS selectors.
 
-import { parsePrices } from '../core/parser/parse';
+import { LEAD, NUMBER, parsePrices } from '../core/parser/parse';
+import { parseCzkNumber } from '../core/parser/normalize';
 import type { PriceMatch } from '../core/parser/types';
 
 /** A text node found to contain one or more CZK prices, ready for the mutator. */
@@ -32,6 +33,20 @@ export interface ScanOptions {
   root?: Node;
   /** Minimum price value to keep; matches strictly below it are dropped. Default 0. */
   minValue?: number;
+  /**
+   * Adapter ignore predicate (task 10): a text node is skipped when this returns `true` for
+   * its parent element. Adapters pass a `closest(ignoreSelectors)` check so cart quantities,
+   * shipping thresholds, and comparison prices inside their containers are left alone.
+   */
+  ignore?: (el: Element) => boolean;
+  /**
+   * Opt into anchorless matching (task 10) — match bare numbers with NO currency anchor.
+   * OFF by default and only ever set by a site adapter scanning inside its explicit
+   * `priceSelectors`, where the currency is implied by the selector scope. The generic
+   * engine never sets this: anchorless guessing on the open web is the false-positive trap
+   * the currency anchor exists to prevent.
+   */
+  allowAnchorless?: boolean;
 }
 
 /** Element tag names whose text content must never be rewritten. */
@@ -44,6 +59,30 @@ const SKIP_ATTRS = ['data-timeprice', 'data-timeprice-skip'];
 // and is rejected before the (more expensive) parser runs. No `g` flag — `.test()` is then
 // stateless and safe to reuse.
 const HAS_DIGIT = /\d/;
+
+// Anchorless number matcher for the adapter `allowAnchorless` path. It is just the parser's
+// number grammar (`NUMBER`) behind the same leading guard (`LEAD`, which forbids starting
+// mid-number / on a negative) — with the currency anchor stripped off. The `LEAD` lookbehind
+// is zero-width, so each match's `[index, index + length)` range is exactly the number
+// substring and the offset invariant still holds. This lives here (content), never in the
+// pure core parser, so the no-anchor capability stays fenced to adapter selectors.
+const ANCHORLESS_RE = new RegExp(`${LEAD}(?:${NUMBER})`, 'giu');
+
+/**
+ * Find every bare CZK number in `text`, ignoring the missing currency anchor. Used only by
+ * the adapter `allowAnchorless` path, within explicit price selectors — see `ScanOptions`.
+ */
+function parseAnchorlessNumbers(text: string, minValue: number): PriceMatch[] {
+  const out: PriceMatch[] = [];
+  for (const m of text.matchAll(ANCHORLESS_RE)) {
+    const raw = m[0]!; // `LEAD` is zero-width, so this is the number itself
+    const value = parseCzkNumber(raw);
+    if (!Number.isFinite(value) || value < minValue) continue;
+    const start = m.index!;
+    out.push({ value, start, end: start + raw.length, raw, anchor: 'none' });
+  }
+  return out;
+}
 
 /**
  * Walk ancestors of a text node and decide whether it sits in a forbidden context.
@@ -71,14 +110,17 @@ function inForbiddenContext(start: Element | null): boolean {
 }
 
 /**
- * Whether a text node is worth parsing: it must carry a digit (cheap pre-filter) and not
- * live in a forbidden context. Shared by the `TreeWalker` filter and the text-node-root
- * fast path so both apply identical rules.
+ * Whether a text node is worth parsing: it must carry a digit (cheap pre-filter), not live
+ * in a forbidden context, and not be excluded by the adapter `ignore` predicate. Shared by
+ * the `TreeWalker` filter and the text-node-root fast path so both apply identical rules.
  */
-function isScannableText(node: Node): boolean {
+function isScannableText(node: Node, ignore?: (el: Element) => boolean): boolean {
   const text = node.nodeValue;
   if (!text || !HAS_DIGIT.test(text)) return false;
-  return !inForbiddenContext(node.parentElement);
+  const parent = node.parentElement;
+  if (inForbiddenContext(parent)) return false;
+  if (ignore && parent && ignore(parent)) return false;
+  return true;
 }
 
 /**
@@ -95,8 +137,12 @@ export function scan(opts?: ScanOptions): PriceCandidate[] {
   if (!root) return candidates; // e.g. called before <body> exists
 
   const minValue = opts?.minValue;
+  const ignore = opts?.ignore;
+  const allowAnchorless = opts?.allowAnchorless ?? false;
   const collect = (node: Text): void => {
-    const matches = parsePrices(node.data, { minValue });
+    const matches = allowAnchorless
+      ? parseAnchorlessNumbers(node.data, minValue ?? 0)
+      : parsePrices(node.data, { minValue });
     if (matches.length > 0) candidates.push({ node, matches });
   };
 
@@ -104,7 +150,7 @@ export function scan(opts?: ScanOptions): PriceCandidate[] {
   // mutation record from the observer (task 08) — would otherwise be skipped entirely.
   // Handle it directly, applying the same scannability rules.
   if (root.nodeType === Node.TEXT_NODE) {
-    if (isScannableText(root)) collect(root as Text);
+    if (isScannableText(root, ignore)) collect(root as Text);
     return candidates;
   }
 
@@ -116,7 +162,7 @@ export function scan(opts?: ScanOptions): PriceCandidate[] {
 
   const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (node) =>
-      isScannableText(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+      isScannableText(node, ignore) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
   });
 
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
