@@ -1,0 +1,203 @@
+// In-place mutator — the "replace" half of the content engine (task 07).
+//
+// Takes the read-only candidates from the scanner (task 06) and rewrites each price into
+// its work-time equivalent (`formatTime`, task 05) DIRECTLY in the page text. Every
+// replacement is wrapped in a `<span class="tp-converted" data-timeprice>` that:
+//   - shows the converted time as its only text,
+//   - carries everything needed to undo and re-format it (`data-tp-original`,
+//     `data-tp-value`, `data-tp-hours`),
+//   - inherits the page's color/font/strikethrough so the page looks unchanged.
+//
+// The three guarantees this module exists to provide:
+//   - Idempotent: re-running never double-processes. The scanner skips `data-timeprice`
+//     subtrees; the mutator additionally verifies the original substring is still present
+//     before touching a node, so a stale candidate (or an SPA re-render) is a no-op, never
+//     a crash or a duplicate.
+//   - Reversible: `revertAll` / `revertSpan` restore byte-identical original text and
+//     normalize the surrounding text nodes, so disabling (task 09) or re-applying on a
+//     rate change leaves no DOM cruft.
+//   - Re-formattable: `reformatAll` recomputes the display from the stored `data-tp-value`
+//     with a new rate, without re-parsing the DOM (task 08/09 call it on settings change).
+//
+// Split prices (a number and its anchor in sibling elements) are NOT handled here: the
+// `PriceCandidate` shape models a single text node and the scanner never emits them. They
+// are resolved precisely by site adapters in task 10.
+
+import { formatTime } from '@core/convert';
+import type { ConversionContext } from '@core/convert';
+import type { PriceMatch } from '@core/parser/types';
+
+import type { PriceCandidate } from './scanner';
+import { setTooltip } from './tooltip';
+
+/** Id of the single injected stylesheet that keeps our spans visually invisible. */
+const STYLE_ID = 'tp-style';
+
+/**
+ * Marker class on every converted span. Namespaced (`tp-converted`, not a bare `tp`) so a
+ * host site's own short class cannot collide with ours and restyle our spans — the goal is
+ * to stay visually invisible on arbitrary pages. Identification still keys off the
+ * `data-timeprice` attribute everywhere; this class is only a stable hook for a future
+ * custom tooltip bubble (task 07 §4 nice-to-have).
+ */
+const SPAN_CLASS = 'tp-converted';
+
+// Targeted inheritance so the page keeps its exact look: same color and font, and a
+// parent's strikethrough (discounts: `<del>`/`line-through`) still paints across our span.
+// Deliberately NOT `all: unset` (that would drop font inheritance) and deliberately NO
+// layout properties (margin/padding/display) so the page's feel is untouched. A
+// `white-space: nowrap` mitigation for ellipsis clipping is left to task 11. The rule keys
+// off the `data-timeprice` attribute (not the class) on purpose: it outranks bare
+// `span { … }` rules and cannot be shadowed by a host site's class styles.
+const STYLE_TEXT = '[data-timeprice]{color:inherit;font:inherit;text-decoration:inherit;}';
+
+/**
+ * Convert every candidate's prices in place, at the given rate/context.
+ *
+ * Order across candidates is irrelevant (each is an independent text node); within a node
+ * the matches are replaced back-to-front so earlier offsets stay valid.
+ */
+export function applyAll(candidates: PriceCandidate[], ctx: ConversionContext): void {
+  for (const candidate of candidates) applyToCandidate(candidate, ctx);
+}
+
+/** Convert a single candidate's matches in place. Exported for per-subtree use (task 08). */
+export function applyToCandidate(candidate: PriceCandidate, ctx: ConversionContext): void {
+  const node = candidate.node;
+  const doc = node.ownerDocument;
+  if (!doc || !node.isConnected) return; // detached / stale candidate
+  if (isInProcessedSpan(node)) return; // defensive idempotency guard
+
+  ensureStyles(doc);
+
+  // Replace from the largest start offset down, so each `splitText` only trims the tail of
+  // `node` and the still-unprocessed (earlier) matches keep their original offsets. We sort
+  // a copy rather than trust input order — the offset invariant is too important to assume.
+  const ordered = [...candidate.matches].sort((a, b) => b.start - a.start);
+  for (const match of ordered) applyMatch(node, match, ctx, doc);
+}
+
+/**
+ * Replace one match inside `node` with a converted-price span.
+ *
+ * The offset guard makes this safe to call on a node that has changed since scanning: if
+ * the exact original substring is no longer at `[start, end)` we leave the node alone.
+ */
+function applyMatch(node: Text, match: PriceMatch, ctx: ConversionContext, doc: Document): void {
+  if (match.end > node.data.length) return;
+  if (node.data.slice(match.start, match.end) !== match.raw) return;
+
+  const result = formatTime(match.value, ctx);
+  if (result.display === '') return; // invalid rate/price — leave the original untouched
+
+  // Isolate the matched substring as its own text node, splitting only where needed so no
+  // empty text nodes are left behind.
+  if (match.end < node.data.length) node.splitText(match.end);
+  const priceNode = match.start > 0 ? node.splitText(match.start) : node;
+
+  const span = doc.createElement('span');
+  span.className = SPAN_CLASS;
+  span.setAttribute('data-timeprice', '');
+  span.setAttribute('data-tp-original', match.raw);
+  span.setAttribute('data-tp-value', String(match.value));
+  span.setAttribute('data-tp-hours', String(result.hours));
+  span.textContent = result.display;
+  setTooltip(span, match.raw);
+
+  priceNode.replaceWith(span);
+}
+
+/**
+ * Re-compute the displayed time for every converted span under `root` (default: the whole
+ * document) using `ctx`, without re-parsing the DOM. Reads the stored `data-tp-value`, so
+ * it is cheap and leaves `data-tp-original` / `data-tp-value` untouched. Called by task
+ * 08/09 when the rate or rounding changes.
+ */
+export function reformatAll(ctx: ConversionContext, root?: Node): void {
+  const scope = scopeOf(root);
+  if (!scope) return;
+  scope.querySelectorAll('[data-timeprice]').forEach((el) => reformatSpan(el as HTMLElement, ctx));
+}
+
+function reformatSpan(span: HTMLElement, ctx: ConversionContext): void {
+  const valueAttr = span.getAttribute('data-tp-value');
+  if (valueAttr === null) return;
+  const value = Number(valueAttr);
+  if (!Number.isFinite(value)) return;
+
+  const result = formatTime(value, ctx);
+  if (result.display === '') return; // invalid ctx — keep the current display
+
+  span.textContent = result.display;
+  span.setAttribute('data-tp-hours', String(result.hours));
+}
+
+/**
+ * Revert every converted span under `root` (default: the whole document) back to its
+ * original price text, restoring byte-identical text. Adjacent text nodes are normalized
+ * once per affected parent so the DOM does not accumulate fragments across enable/disable
+ * cycles.
+ */
+export function revertAll(root?: Node): void {
+  const scope = scopeOf(root);
+  if (!scope) return;
+
+  const parents = new Set<Node>();
+  const revertOne = (el: Element): void => {
+    const parent = detachSpan(el as HTMLElement);
+    if (parent) parents.add(parent);
+  };
+
+  // `querySelectorAll` never returns its own root, so handle a root that is itself a span.
+  if (root?.nodeType === Node.ELEMENT_NODE && (root as Element).hasAttribute('data-timeprice')) {
+    revertOne(root as Element);
+  }
+  scope.querySelectorAll('[data-timeprice]').forEach(revertOne);
+
+  for (const parent of parents) parent.normalize();
+}
+
+/** Revert a single converted span to its original price text and normalize its parent. */
+export function revertSpan(span: HTMLElement): void {
+  detachSpan(span)?.normalize();
+}
+
+/**
+ * Replace a converted span with a plain text node carrying its `data-tp-original`. Returns
+ * the parent (for batched normalization), or `null` if the span isn't ours / is detached.
+ */
+function detachSpan(span: HTMLElement): Node | null {
+  const original = span.getAttribute('data-tp-original');
+  if (original === null) return null;
+  const parent = span.parentNode;
+  if (!parent) return null;
+  parent.replaceChild(span.ownerDocument.createTextNode(original), span);
+  return parent;
+}
+
+/** True if `node` already sits inside a converted span (so it must not be processed again). */
+function isInProcessedSpan(node: Node): boolean {
+  for (let el = node.parentElement; el; el = el.parentElement) {
+    if (el.hasAttribute('data-timeprice')) return true;
+  }
+  return false;
+}
+
+/** Resolve a `querySelectorAll`-capable scope from an optional root. */
+function scopeOf(root: Node | undefined): Document | Element | DocumentFragment | null {
+  if (!root) return typeof document !== 'undefined' ? document : null;
+  const nt = root.nodeType;
+  if (nt === Node.ELEMENT_NODE || nt === Node.DOCUMENT_NODE || nt === Node.DOCUMENT_FRAGMENT_NODE) {
+    return root as Document | Element | DocumentFragment;
+  }
+  return root.ownerDocument; // e.g. a text node → search its document
+}
+
+/** Inject the inheritance stylesheet once per document (cheap no-op on repeat calls). */
+function ensureStyles(doc: Document): void {
+  if (doc.getElementById(STYLE_ID)) return;
+  const style = doc.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = STYLE_TEXT;
+  (doc.head ?? doc.documentElement).appendChild(style);
+}
