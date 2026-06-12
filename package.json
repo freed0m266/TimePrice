@@ -2,7 +2,7 @@
   "name": "timeprice",
   "description": "Chrome extension that converts e-shop prices into the work time needed to earn them.",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

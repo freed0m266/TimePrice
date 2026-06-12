@@ -15,12 +15,23 @@ export default defineConfig({
   manifest: {
     name: 'TimePrice',
     description: 'Převádí ceny v e-shopech na čas, který musíš odpracovat, abys na ně vydělal.',
-    version: '0.1.0',
+    version: '1.0.0',
     // Minimal permissions (audited in task 12). `storage` for settings; `activeTab` lets the
     // popup read the active tab's URL (for the per-site toggle, task 09) only after the user
     // opens it — no broad `tabs`/`scripting`/`webNavigation`/`cookies`, and no
     // `host_permissions` beyond the content script's `<all_urls>` match. Store justification
     // for `<all_urls>` lives in marketing/store-listing.md.
     permissions: ['storage', 'activeTab'],
+    // Toolbar icon. WXT auto-detects public/icon/*.png into manifest `icons`, but it does not
+    // populate `action.default_icon`, so we wire it explicitly here. This merges with the
+    // popup entrypoint's default_popup/default_title. Source of truth: assets/icons/icon.svg.
+    action: {
+      default_icon: {
+        16: 'icon/16.png',
+        32: 'icon/32.png',
+        48: 'icon/48.png',
+        128: 'icon/128.png',
+      },
+    },
   },
 });

@@ -1,0 +1,31 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- TimePrice master icon. Concept: "cena → čas". A white analog clock (the time
+       motif) on the brand-blue app square, with a subtle price-tag silhouette behind it
+       (the price motif) that adds context at large sizes but never hurts 16px legibility.
+       Designed primarily for 16px: a large white disc + thick blue hands give high contrast
+       and no fine detail that smears when downscaled. PNGs in public/icon/ render from this. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App square -->
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- Price-tag silhouette behind the clock: faint, adds "price" context at large sizes. -->
+  <g transform="rotate(-32 64 64)" opacity="0.15">
+    <path d="M52 22 h36 a8 8 0 0 1 8 8 v36 a8 8 0 0 1 -2.34 5.66 l-42 42 a8 8 0 0 1 -11.32 0 l-36 -36 a8 8 0 0 1 0 -11.32 l42 -42 A8 8 0 0 1 52 22 Z" fill="#ffffff"/>
+    <circle cx="82" cy="46" r="6.5" fill="#1d4ed8"/>
+  </g>
+
+  <!-- Clock face: large disc fills the square for 16px legibility. -->
+  <circle cx="64" cy="64" r="46" fill="#ffffff"/>
+  <!-- Hands at 10:10 (friendliest, most balanced reading). Thick so they survive 16px. -->
+  <g stroke="#1d4ed8" stroke-linecap="round" fill="none">
+    <line x1="64" y1="64" x2="44" y2="53" stroke-width="7.5"/>
+    <line x1="64" y1="64" x2="91" y2="48" stroke-width="6"/>
+  </g>
+  <circle cx="64" cy="64" r="5" fill="#1d4ed8"/>
+</svg>
