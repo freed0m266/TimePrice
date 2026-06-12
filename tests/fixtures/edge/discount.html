@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+  Discount edge case — original price struck through, sale price beside it. Both prices convert;
+  the strikethrough element (<del>) and the line-through styling stay intact (we replace text
+  content, not elements). Converts (rate 1000 Kč/h): 2 000 Kč (in <del>), 1 000 Kč (sale).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Discount — fixture</title>
+    <style>
+      .original {
+        text-decoration: line-through;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sluchátka Bass</h1>
+      <div class="price-block">
+        <del class="original">2 000 Kč</del>
+        <span class="sale">1 000 Kč</span>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+  Cleaned Alza.cz snapshot — pins the alza adapter selectors (src/content/adapters/sites/alza.ts).
+  priceSelectors: .price-box__price, .c2-price-final, [data-testid="pricePrimary"].
+  ignoreSelectors: .price-box__compare-price, .c2-price-old, .js-priceWithoutVat, .cart-quantity.
+  The compare + without-VAT prices are NESTED inside .price-box__price so the ignore selectors are
+  genuinely exercised (they only fire inside a price container). Re-snapshot from the live DOM if
+  the adapter regression test goes red.
+  Converts (rate 1000 Kč/h): 30 000 Kč, 7 000 Kč, 1 990 Kč.
+  Untouched: 35 000 Kč (compare), 24 793 Kč (without VAT), 9 000 Kč (old card), 79 Kč (footer, out of container).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Alza — fixture</title>
+  </head>
+  <body>
+    <header class="header"><span class="logo">Alza.cz</span></header>
+
+    <main>
+      <section class="product-detail">
+        <h1>Notebook UltraBook 15</h1>
+        <div class="price-box__price">30 000 Kč<span class="price-box__compare-price">35 000 Kč</span><span class="js-priceWithoutVat">24 793 Kč bez DPH</span></div>
+        <div class="cart">Množství: <span class="cart-quantity">1</span> ks</div>
+      </section>
+
+      <section class="listing">
+        <article class="c2-product">
+          <h3>Myš Wireless</h3>
+          <span class="c2-price-final">7 000 Kč<span class="c2-price-old">9 000 Kč</span></span>
+        </article>
+        <article class="c2-product">
+          <h3>Klávesnice Mech</h3>
+          <span data-testid="pricePrimary">1 990 Kč</span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">Doprava od 79 Kč · © Alza</footer>
+  </body>
+</html>

@@ -9,3 +9,12 @@ coverage
 tasks
 .claude
 *.md
+
+# E2E fixtures are saved e-shop HTML snapshots — whitespace inside price elements is
+# semantically load-bearing (text-node boundaries the parser/offset tests rely on), so
+# Prettier must not reflow them. Treated like the roadmap docs above.
+tests/fixtures
+
+# Playwright artifacts.
+playwright-report
+test-results

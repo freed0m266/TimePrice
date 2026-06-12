@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+  Unit-price edge case — prices with a per-unit suffix (per kg, per month). The generic engine
+  converts the anchored amount in place and PRESERVES the suffix (offset invariant: only the
+  "199 Kč" / "299 Kč" substring is replaced, "/kg" and "/ měsíc" stay). Site adapters additionally
+  list `.unit-price` in ignoreSelectors so these are skipped entirely inside their price boxes.
+  Converts (rate 1000 Kč/h): 199 Kč → keeps "/kg"; 299 Kč → keeps "/ měsíc".
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Unit price — fixture</title>
+  </head>
+  <body>
+    <main>
+      <p>Mleté maso <span class="price">199 Kč/kg</span></p>
+      <p>Předplatné <span class="price">299 Kč / měsíc</span></p>
+    </main>
+  </body>
+</html>

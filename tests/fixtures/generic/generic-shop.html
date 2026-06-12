@@ -1,0 +1,29 @@
+<!doctype html>
+<!--
+  Generic e-shop product detail — NO site adapter (the generic anchored engine runs on
+  document.body). Pins the currency-anchor invariant: only Kč/CZK/,- numbers convert; bare
+  numbers (specs, model years, codes) must be left alone.
+  Converts (rate 1000 Kč/h): 2 000 Kč, 199 CZK, 1 500,-
+  Untouched: 60 W, rok 2024, model 2026, kód 12345 (no currency anchor).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Generic shop — fixture</title>
+  </head>
+  <body>
+    <header>E-shop bez adaptéru</header>
+    <main>
+      <h1>Stolní lampa LED</h1>
+      <div class="price-main">2 000 Kč</div>
+      <ul class="specs">
+        <li>Příkon: 60 W</li>
+        <li>Rok výroby: 2024</li>
+        <li>Model: 2026</li>
+        <li>Kód: 12345</li>
+      </ul>
+      <p class="alt-anchors">Také jako 199 CZK nebo 1 500,- ve výprodeji.</p>
+    </main>
+    <footer>© Generic</footer>
+  </body>
+</html>

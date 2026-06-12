@@ -1,0 +1,36 @@
+<!doctype html>
+<!--
+  Cleaned CZC.cz snapshot — pins the czc adapter selectors (src/content/adapters/sites/czc.ts).
+  priceSelectors: .pd-price__value, .price-vatdisplay, .tile-price .price.
+  ignoreSelectors: .price-novat, .pd-price__old, .tile-price .price--old.
+  The without-VAT line (.price-novat) and the old price (.pd-price__old) are NESTED inside
+  .pd-price__value so both ignore selectors are exercised.
+  Converts (rate 1000 Kč/h): 12 000 Kč, 6 500 Kč, 3 000 Kč.
+  Untouched: 9 917 Kč (without VAT), 14 000 Kč (old), 3 500 Kč (old card), 59 Kč (footer).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>CZC — fixture</title>
+  </head>
+  <body>
+    <header class="header"><span class="logo">CZC.cz</span></header>
+
+    <main>
+      <section class="detail">
+        <h1>Grafická karta GX</h1>
+        <div class="pd-price__value">12 000 Kč<span class="price-novat">9 917 Kč bez DPH</span><span class="pd-price__old">14 000 Kč</span></div>
+        <div class="vat-block"><span class="price-vatdisplay">6 500 Kč</span></div>
+      </section>
+
+      <section class="listing">
+        <article class="tile-price">
+          <h3>SSD 1 TB</h3>
+          <span class="price">3 000 Kč<span class="price--old">3 500 Kč</span></span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">Doprava od 59 Kč · © CZC</footer>
+  </body>
+</html>

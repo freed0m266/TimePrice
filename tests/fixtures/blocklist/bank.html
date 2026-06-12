@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  Blocklist fixture — a bank-like page. TimePrice must NEVER run on a built-in sensitive domain
+  (banks, payment gateways, gov, brokers) even when globally enabled: swapping a balance or a
+  payment total for a time value could mislead about real money. The Playwright E2E serves this
+  under a built-in-blocked host (e.g. csas.cz via host-resolver-rules) and asserts the page is
+  byte-identical. Expected: NO conversion — every Kč amount stays as-is.
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Banka — fixture</title>
+  </head>
+  <body>
+    <header>Internetové bankovnictví</header>
+    <main>
+      <div class="account">
+        <span class="label">Zůstatek na účtu</span>
+        <span class="balance">125 000 Kč</span>
+      </div>
+      <div class="payment">
+        <span class="label">K úhradě</span>
+        <span class="amount">4 500 Kč</span>
+      </div>
+    </main>
+  </body>
+</html>

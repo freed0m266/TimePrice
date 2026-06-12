@@ -1,0 +1,36 @@
+<!doctype html>
+<!--
+  Cleaned Datart.cz snapshot — pins the datart adapter selectors (src/content/adapters/sites/datart.ts).
+  priceSelectors: .product-price__main, .actual-price, .product-box .price.
+  ignoreSelectors: .product-price__old, .product-box .price--old, .unit-price.
+  The old price (.product-price__old) and the unit price (.unit-price) are NESTED inside
+  .product-price__main so both ignore selectors are exercised.
+  Converts (rate 1000 Kč/h): 4 990 Kč, 8 000 Kč, 3 000 Kč.
+  Untouched: 5 990 Kč (old), 250 Kč/kg (unit), 2 000 Kč (old card), 49 Kč (footer).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Datart — fixture</title>
+  </head>
+  <body>
+    <header class="header"><span class="logo">Datart.cz</span></header>
+
+    <main>
+      <section class="detail">
+        <h1>Lednice NoFrost</h1>
+        <div class="product-price__main">4 990 Kč<span class="product-price__old">5 990 Kč</span><span class="unit-price">250 Kč / kg</span></div>
+        <div class="bundle"><span class="actual-price">8 000 Kč</span></div>
+      </section>
+
+      <section class="listing">
+        <article class="product-box">
+          <h3>Mikrovlnka</h3>
+          <span class="price">3 000 Kč<span class="price--old">2 000 Kč</span></span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">Doprava od 49 Kč · © Datart</footer>
+  </body>
+</html>

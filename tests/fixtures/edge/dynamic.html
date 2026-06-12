@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  Dynamic-injection edge case — a price node is appended ~150 ms after load (lazy/async render).
+  The live MutationObserver must pick it up and convert it without a reload. The jsdom integration
+  test injects the node programmatically; the Playwright E2E lets this inline script run.
+  Converts (rate 1000 Kč/h): 5 000 Kč → 5 h (appears only after the timeout).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dynamic — fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>Doporučené zboží</h1>
+      <div id="root"><p class="placeholder">Načítám…</p></div>
+    </main>
+    <script>
+      setTimeout(function () {
+        var el = document.createElement('div');
+        el.className = 'lazy-price';
+        el.textContent = '5 000 Kč';
+        document.getElementById('root').appendChild(el);
+      }, 150);
+    </script>
+  </body>
+</html>

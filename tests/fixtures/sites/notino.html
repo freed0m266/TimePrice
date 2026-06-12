@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  Cleaned Notino.cz snapshot — pins the notino adapter selectors (src/content/adapters/sites/notino.ts).
+  priceSelectors: [data-testid="pd-price"], .pd-price, [data-testid="product-price"].
+  ignoreSelectors: [data-testid="pd-price-old"], .pd-price--old, del.
+  The struck-through comparison price (<del>) and the old price are NESTED inside the price
+  containers so the ignore selectors are exercised. Notino is React-heavy; the SPA re-render
+  behaviour is covered by tests/fixtures/edge/spa.html + the observer regression test.
+  Converts (rate 1000 Kč/h): 499 Kč, 1 200 Kč, 2 000 Kč.
+  Untouched: 699 Kč (del), 1 500 Kč (old), 39 Kč (footer).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notino — fixture</title>
+  </head>
+  <body>
+    <header class="header"><span class="logo">Notino.cz</span></header>
+
+    <main id="app">
+      <section class="detail">
+        <h1>Parfém Bloom 50 ml</h1>
+        <div data-testid="pd-price">499 Kč<del>699 Kč</del></div>
+        <div class="pd-price">1 200 Kč<span class="pd-price--old">1 500 Kč</span></div>
+      </section>
+
+      <section class="listing">
+        <article class="product">
+          <h3>Krém Night</h3>
+          <span data-testid="product-price">2 000 Kč</span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">Doprava od 39 Kč · © Notino</footer>
+  </body>
+</html>

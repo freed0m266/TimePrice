@@ -17,6 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "wxt build && playwright test",
+    "test:e2e:headed": "wxt build && playwright test --headed",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.60.0",
     "@vitest/coverage-v8": "^4.1.8",
     "@wxt-dev/module-svelte": "^2.0.5",
     "eslint": "^9.39.4",

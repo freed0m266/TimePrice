@@ -1,0 +1,19 @@
+<!doctype html>
+<!--
+  No-prices edge case — a page full of numbers but no currency anchor anywhere. The engine must
+  convert NOTHING and leave the document byte-identical (zero false positives).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>No prices — fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>O nás</h1>
+      <p>Založeno 1998. Tým 42 lidí na 3 pobočkách.</p>
+      <p>Otevřeno 9–17, telefon 800 123 456.</p>
+      <p>Teplota dnes 21 °C, vlhkost 55 %.</p>
+    </main>
+  </body>
+</html>

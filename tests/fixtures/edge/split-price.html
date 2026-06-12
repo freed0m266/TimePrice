@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+  Split-price edge case — the amount and its currency anchor live in SEPARATE elements, so the
+  number's own text node carries no anchor. The generic engine deliberately leaves it ALONE
+  (conservative: no "30 h Kč" artifact). Split prices are resolved per-site by an adapter
+  `extract` (task 10), never by the generic engine.
+  Expected: NO conversion — the page text stays "30 000" + "Kč".
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Split price — fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>Televize 55"</h1>
+      <div class="price"><span class="amount">30 000</span><span class="currency">Kč</span></div>
+    </main>
+  </body>
+</html>

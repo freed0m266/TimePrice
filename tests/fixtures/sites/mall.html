@@ -1,0 +1,39 @@
+<!doctype html>
+<!--
+  Cleaned Mall.cz snapshot — pins the mall adapter selectors (src/content/adapters/sites/mall.ts).
+  priceSelectors: .pdp-prices__main, .product-box__price, [data-element="product-price"].
+  ignoreSelectors: .pdp-prices__original, .product-box__price--old, .free-delivery-threshold.
+  The original price is NESTED inside .pdp-prices__main so the ignore selector is exercised.
+  Converts (rate 1000 Kč/h): 12 000 Kč, 1 000 Kč, 2 500 Kč.
+  Untouched: 15 000 Kč (original), 1 400 Kč (old card), 1 500 Kč (free-delivery threshold), 49 Kč (footer).
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mall — fixture</title>
+  </head>
+  <body>
+    <header class="header"><span class="logo">Mall.cz</span></header>
+
+    <main>
+      <section class="pdp">
+        <h1>Pračka Slim 6 kg</h1>
+        <div class="pdp-prices__main">12 000 Kč<span class="pdp-prices__original">15 000 Kč</span></div>
+        <div class="free-delivery-threshold">Doprava zdarma nad 1 500 Kč</div>
+      </section>
+
+      <section class="listing">
+        <article class="product-box">
+          <h3>Žehlička Steam</h3>
+          <span class="product-box__price">1 000 Kč<span class="product-box__price--old">1 400 Kč</span></span>
+        </article>
+        <article class="product-box">
+          <h3>Fén Pro</h3>
+          <span data-element="product-price">2 500 Kč</span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">Doprava od 49 Kč · © Mall</footer>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  SPA-navigation edge case — clicking "Další produkt" swaps the view and pushes a new history
+  entry WITHOUT a page load, like a React/Vue router. The observer's history hook must trigger a
+  fresh pass so the new price converts. The jsdom integration test drives the swap programmatically;
+  the Playwright E2E clicks the button.
+  Converts (rate 1000 Kč/h): 10 000 Kč → 10 h initially, then 20 000 Kč → 20 h after navigation.
+-->
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <title>SPA — fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>SPA katalog</h1>
+      <div id="view"><div class="price">10 000 Kč</div></div>
+      <button id="nav" type="button">Další produkt</button>
+    </main>
+    <script>
+      document.getElementById('nav').addEventListener('click', function () {
+        history.pushState({}, '', '/product/2');
+        document.getElementById('view').innerHTML = '<div class="price">20 000 Kč</div>';
+      });
+    </script>
+  </body>
+</html>
