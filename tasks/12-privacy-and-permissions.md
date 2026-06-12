@@ -1,6 +1,6 @@
 # 12 — Privacy & minimalizace oprávnění + privacy policy
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** S · **Dopad:** Vysoký (blokuje store review)
 
