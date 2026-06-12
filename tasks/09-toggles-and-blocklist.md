@@ -1,6 +1,6 @@
 # 09 — Global + per-site toggle + blocklist citlivých domén
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** M · **Dopad:** Vysoký
 
