@@ -1,6 +1,6 @@
 # 07 — In-place mutator + reverzibilita + hover tooltip
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** L · **Dopad:** Blokující
 
