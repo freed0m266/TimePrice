@@ -1,8 +1,110 @@
-# Chrome Web Store — listing & privacy disclosures (task 12)
+# Chrome Web Store — listing & privacy disclosures (tasks 12 + 13)
 
 Ready-to-paste answers for the Chrome Web Store submission. Keep this in sync with the
-actual manifest and [`privacy-policy.html`](privacy-policy.html). Hosting the policy and the
-final submission happen in tasks 13/14; this file is the prepared content.
+actual manifest and [`privacy-policy.html`](privacy-policy.html). The listing copy, icons and
+store graphics are prepared here (task 13); the actual upload happens in task 14. Image assets
+live in [`store/`](store/).
+
+---
+
+## Listing metadata
+
+| Field | Value |
+| --- | --- |
+| **Name** | TimePrice |
+| **Version** | 1.0.0 |
+| **Category** | Shopping |
+| **Primary language** | Čeština (CZK-only product) |
+| **Secondary language** | English (optional) |
+| **Icon** | `store/` → built from `public/icon/*.png` (source `assets/icons/icon.svg`) |
+
+> Category note: **Shopping** fits best (the extension acts on e-shop product/cart prices).
+> **Productivity** is an acceptable alternative if Shopping is over-crowded; pick one, don't
+> dual-list.
+
+---
+
+## Short description (max 132 chars)
+
+**Čeština** (100 chars):
+
+> Převádí ceny na e-shopech na čas, který musíš odpracovat. Zjisti, kolik hodin tě nákup
+> reálně stojí.
+
+**English** (optional, 92 chars):
+
+> Turns e-shop prices into the work time you'd need to earn them. See the real cost in hours.
+
+---
+
+## Detailed description (Čeština)
+
+> **Kolik hodin práce tě ten nákup reálně stojí?**
+>
+> TimePrice přepíše ceny na e-shopech na čas, který musíš odpracovat, abys na ně vydělal.
+> Místo „30 000 Kč" uvidíš třeba „30 h" — rovnou v textu stránky, beze změny vzhledu.
+>
+> **Jak to funguje**
+> 1. Otevři rozšíření a zadej svou čistou hodinovou sazbu (kolik ti reálně přijde za hodinu).
+> 2. Procházej e-shopy jako obvykle — ceny se samy převedou na čas (minuty, hodiny, dny).
+> 3. Najedeš myší na převedený údaj a uvidíš původní cenu v Kč.
+>
+> **Soukromí na prvním místě**
+> TimePrice **nic neposílá** — žádný server, žádná analytika, žádné sledování. Všechno běží
+> jen ve tvém prohlížeči a tvoje sazba se ukládá lokálně. Na citlivých webech (banky, platební
+> brány, státní správa, brokeři) se rozšíření **nikdy nespustí**, i když je globálně zapnuté.
+>
+> **Ovládání**
+> • Globální vypínač i přepínač pro jednotlivé weby.
+> • Chytré jednotky a české formátování (`3,75 d`).
+>
+> **Kde to fungovat má**
+> Optimalizováno pro přední české e-shopy — Alza, Mall, Datart, CZC a Notino — a navíc funguje
+> obecně všude, kde je u ceny uvedeno „Kč", „CZK" nebo „,-".
+>
+> **Co (zatím) neumí**
+> • Pouze české koruny (CZK). Cizí měny nepřevádíme.
+> • Nepřevádíme ceny vykreslené jako obrázek/canvas (typicky bannery) — jen textové ceny.
+> • Daně za tebe nepočítáme: zadáváš čistou sazbu, jakou ji znáš.
+
+---
+
+## Detailed description (English, optional)
+
+> **How many hours of work does that purchase really cost?**
+>
+> TimePrice rewrites prices on e-shops into the work time you'd need to earn them. Instead of
+> "30 000 Kč" you see "30 h" — right in the page text, with the look unchanged.
+>
+> **How it works**
+> 1. Open the extension and enter your net hourly rate.
+> 2. Browse e-shops as usual — prices convert to time (minutes, hours, days) automatically.
+> 3. Hover a converted value to see the original price.
+>
+> **Privacy first** — TimePrice sends nothing: no server, no analytics, no tracking. Everything
+> runs in your browser and your rate is stored locally. It never runs on sensitive sites
+> (banks, payment gateways, government, brokers), even when globally enabled.
+>
+> **Note:** Czech koruna (CZK) only for now; image/canvas-rendered prices aren't converted.
+
+---
+
+## Screenshots & promo graphics (`store/`)
+
+Built from neutral, fictional demo content (no real brand/product names) to avoid trademark
+issues on store graphics — see "Rizika" in [task 13](../tasks/13-icons-and-store-listing.md).
+Re-render with [`store/render.sh`](store/render.sh).
+
+| File | Size | Shows |
+| --- | --- | --- |
+| `store/01-before-after.png` | 1280×800 | Demo e-shop: prices in Kč → the same prices in work time. |
+| `store/02-popup-rate.png` | 1280×800 | Popup: setting the net hourly rate. |
+| `store/03-per-site-toggle.png` | 1280×800 | Popup: global + per-site on/off toggles. |
+| `store/04-tooltip.png` | 1280×800 | Hover tooltip revealing the original Kč price. |
+| `store/promo-440x280.png` | 440×280 | Small promo tile (icon + tagline). |
+
+Upload 3–5 screenshots at 1280×800. The small promo tile (440×280) is required for some store
+placements; the large 1400×560 marquee tile is optional and not produced here.
 
 ---
 
@@ -109,3 +211,8 @@ to the privacy posture.
       (content script or background) after a full page interaction.
 - [ ] Popup "Soukromí" link opens the privacy policy.
 - [ ] `pnpm lint` passes, including the no-network rule and its negative test.
+- [ ] Built manifest has `version` `1.0.0`, `icons` 16/32/48/128, and `action.default_icon`.
+- [ ] Toolbar icon is legible on light and dark toolbars (not the WXT placeholder).
+- [ ] `pnpm zip` produces an uploadable package under `.output/`.
+- [ ] Short description ≤ 132 chars; listing claims match the MVP (CZK-only, top CZ shops +
+      generic `Kč`/`CZK`/`,-` fallback) — no "works on every shop in every currency".
