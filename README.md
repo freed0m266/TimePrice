@@ -87,5 +87,11 @@ TimePrice nesbírá ani neodesílá žádná data. Tvá sazba a nastavení žij�
 
 - Jen **CZK** (cizí měny → [task 18](tasks/18-future-multicurrency.md)).
 - Ceny v `<canvas>` a rasterových obrázcích se nepřevádějí (nelze spolehlivě číst).
+- Ceny v SVG `<text>` jsou best-effort, není garantováno.
 - Ceny rozdělené přes víc elementů řeší adaptéry; mimo top eshopy nemusí být vždy zachyceny.
 - Blocklist citlivých domén je konzervativní, ale ne vyčerpávající.
+
+Před releasem se projíždí ruční QA matice na živých webech a release checklist:
+[`tests/QA.md`](tests/QA.md), [`tests/RELEASE.md`](tests/RELEASE.md). Rychlou regresní vrstvu drží
+Playwright E2E + fixtury ([`tests/e2e/`](tests/e2e), `pnpm test:e2e`) a jejich deterministický
+jsdom mirror ([`tests/integration/`](tests/integration), součást `pnpm test`).
