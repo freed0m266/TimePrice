@@ -1,44 +1,33 @@
-// TODO(task05): swap for the shared formatTime() / Converter from src/core/convert.
-//
-// This is a deliberately simple inline stand-in so the popup's live preview works
-// before task 05 lands. It intentionally mirrors the TARGET output shape — Czech
-// decimal comma, compact `min` / `h` / `d` suffixes, workday-aware day scaling — so
-// that swapping in the real formatter later is a drop-in with minimal visual drift.
-// Keep the behaviour close to that contract; do not grow extra features here (other
-// metrics like days/% are task 16, not the preview).
+// Popup-side adapter over the shared core converter. The live preview and the content
+// engine (task 07) both format through `src/core/convert`, so there is one source of
+// truth for how a price reads as time — no drift between what the popup promises and what
+// the page shows. This file only adds the popup's "no rate yet → show nothing" guard and
+// maps settings onto a ConversionContext.
+
+import { formatTime } from '@core/convert';
+import type { AppSettings } from '@/settings/schema';
+
+/** The settings fields the converter needs; the popup passes `settings.current`. */
+type RateSettings = Pick<AppSettings, 'workdayHours' | 'workweekDays' | 'rounding'>;
 
 /**
  * Convert a CZK price to the work time needed to earn it, at a given net hourly rate.
- * Returns a short human string (`"6 min"`, `"1 h"`, `"3,8 d"`) or `null` when the
- * inputs can't produce a meaningful value (no/zero rate, negative price).
+ * Returns the core converter's display string, or `null` when the inputs can't produce a
+ * meaningful value (no/zero/negative rate, negative price) so the caller can show a hint.
  */
 export function formatTimePreview(
   priceCzk: number,
   netHourlyRateCzk: number | null,
-  workdayHours: number,
+  settings: RateSettings,
 ): string | null {
   if (netHourlyRateCzk === null || !(netHourlyRateCzk > 0) || !(priceCzk >= 0)) {
     return null;
   }
 
-  const hours = priceCzk / netHourlyRateCzk;
-  const minutes = hours * 60;
-
-  // Under an hour → whole minutes; reads more naturally than "0,1 h".
-  if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
-  }
-
-  const workday = workdayHours > 0 ? workdayHours : 8;
-  if (hours < workday) {
-    return `${czechNumber(hours)} h`;
-  }
-  return `${czechNumber(hours / workday)} d`;
-}
-
-/** Round to one decimal, drop a trailing `,0`, and use the Czech decimal comma. */
-function czechNumber(value: number): string {
-  const rounded = Math.round(value * 10) / 10;
-  const str = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  return str.replace('.', ',');
+  return formatTime(priceCzk, {
+    netHourlyRateCzk,
+    workdayHours: settings.workdayHours,
+    workweekDays: settings.workweekDays,
+    rounding: settings.rounding,
+  }).display;
 }

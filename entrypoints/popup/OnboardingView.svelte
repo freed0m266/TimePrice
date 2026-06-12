@@ -142,7 +142,7 @@
             <span class="from">{priceCzk(price)}</span>
             <span class="arrow" aria-hidden="true">→</span>
             <span class="to">
-              {formatTimePreview(price, rate, settings.current.workdayHours)}
+              {formatTimePreview(price, rate, settings.current)}
             </span>
           </li>
         {/each}
