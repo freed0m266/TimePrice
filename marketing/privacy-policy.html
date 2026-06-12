@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zásady ochrany soukromí — TimePrice</title>
+    <!-- Everything is inline: no external fonts, scripts, CDNs or trackers. The page that
+         explains "we send nothing" must itself load nothing from the network. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 44rem;
+        padding: 2.5rem 1.25rem 4rem;
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        color: #1a1a1a;
+        background: #fff;
+      }
+      h1 {
+        font-size: 1.7rem;
+        margin: 0 0 0.25rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2rem 0 0.5rem;
+      }
+      .updated {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0 0 1.5rem;
+      }
+      .lede {
+        font-size: 1.05rem;
+        font-weight: 500;
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin: 0.35rem 0;
+      }
+      a {
+        color: #0b62d6;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.92em;
+      }
+      footer {
+        margin-top: 2.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e2e2;
+        color: #666;
+        font-size: 0.9rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #e8e8e8;
+          background: #161616;
+        }
+        .updated,
+        footer {
+          color: #9a9a9a;
+        }
+        a {
+          color: #6fb1ff;
+        }
+        footer {
+          border-top-color: #2c2c2c;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Zásady ochrany soukromí — TimePrice</h1>
+    <p class="updated">Naposledy aktualizováno: 12. června 2026</p>
+
+    <p class="lede">
+      TimePrice běží <strong>výhradně ve vašem prohlížeči</strong>. Neodesíláme nic na žádný server
+      — žádný náš, ani třetích stran. Žádné účty, žádné analytics, žádné sledování.
+    </p>
+
+    <h2>Co rozšíření dělá</h2>
+    <p>
+      TimePrice na webových stránkách (např. e-shopech) převádí zobrazené ceny na čas, který musíte
+      odpracovat, abyste na ně vydělali, podle vámi zadané čisté hodinové sazby. Veškerý tento
+      převod probíhá lokálně ve vašem zařízení v okamžiku zobrazení stránky.
+    </p>
+
+    <h2>Jaká data zpracováváme</h2>
+    <p>Ukládáme pouze vaše nastavení, a to jen pro fungování rozšíření:</p>
+    <ul>
+      <li>vaši čistou hodinovou sazbu,</li>
+      <li>
+        předvolby (globální zapnutí/vypnutí, převody na jednotlivých doménách, váš blocklist, způsob
+        zaokrouhlení a podobné volby).
+      </li>
+    </ul>
+    <p>
+      Tato nastavení se ukládají do úložiště prohlížeče (<code>storage.sync</code>). Pokud máte v
+      prohlížeči zapnutou synchronizaci, prohlížeč je může synchronizovat mezi vašimi zařízeními
+      <strong>přes váš účet u výrobce prohlížeče (např. Google)</strong> — to je funkce prohlížeče,
+      nikoli náš server. My k těmto datům nemáme přístup a nikam je neposíláme. Pokud synchronizaci
+      nechcete, vypněte ji v nastavení prohlížeče; nastavení pak zůstane jen lokálně v daném
+      zařízení.
+    </p>
+
+    <h2>Co NEsbíráme a NEodesíláme</h2>
+    <ul>
+      <li>
+        <strong>Žádný obsah navštívených stránek.</strong> Ceny ani text stránek nikam neodcházejí —
+        čtou se a přepisují jen v paměti vašeho prohlížeče.
+      </li>
+      <li><strong>Žádnou historii prohlížení</strong> ani seznam navštívených URL.</li>
+      <li><strong>Žádné osobní ani identifikační údaje</strong>, žádné identifikátory zařízení.</li>
+      <li><strong>Žádné analytics, telemetrii ani hlášení pádů.</strong></li>
+    </ul>
+    <p>
+      Rozšíření neobsahuje žádný kód, který by inicioval síťový požadavek (<code>fetch</code>,
+      <code>XMLHttpRequest</code>, <code>WebSocket</code>, <code>sendBeacon</code> a podobně). Tento
+      zákaz je vynucen automatickou kontrolou v našem kódu.
+    </p>
+
+    <h2>Cookies a třetí strany</h2>
+    <p>
+      TimePrice nepoužívá žádné cookies a nezapojuje žádné služby třetích stran. Nezobrazujeme
+      reklamy a neprodáváme ani nesdílíme žádná data — protože žádná nesbíráme.
+    </p>
+
+    <h2>Oprávnění rozšíření</h2>
+    <ul>
+      <li><code>storage</code> — uložení vašeho nastavení (viz výše).</li>
+      <li>
+        <code>activeTab</code> — zjištění domény aktivní karty, když otevřete okno rozšíření, abyste
+        mohli převod vypnout/zapnout jen pro tu stránku.
+      </li>
+      <li>
+        Přístup ke stránkám (<code>&lt;all_urls&gt;</code>) — aby rozšíření mohlo přepsat ceny na
+        libovolném e-shopu. Tento přístup se používá výhradně lokálně k převodu cen na čas; nic se
+        na jeho základě neodesílá.
+      </li>
+    </ul>
+
+    <h2>Vaše volby</h2>
+    <ul>
+      <li>Převod můžete kdykoli vypnout globálně nebo pro konkrétní doménu v okně rozšíření.</li>
+      <li>
+        Citlivé domény (banky, platební brány, státní správa) jsou blokované vždy, i když je
+        rozšíření zapnuté.
+      </li>
+      <li>Odinstalováním rozšíření se odstraní i vaše lokálně uložená nastavení.</li>
+    </ul>
+
+    <h2>Změny těchto zásad</h2>
+    <p>
+      Pokud zásady aktualizujeme, změníme datum nahoře a novou verzi zveřejníme na této stránce.
+    </p>
+
+    <footer>
+      <p>
+        Dotazy k soukromí:
+        <a href="mailto:martin.svoboda026@gmail.com">martin.svoboda026@gmail.com</a><br />
+        Zdrojový kód a hlášení problémů:
+        <a href="https://github.com/freed0m266/TimePrice">github.com/freed0m266/TimePrice</a>
+      </p>
+    </footer>
+  </body>
+</html>

@@ -5,6 +5,10 @@
 export const STRINGS = {
   appName: 'TimePrice',
 
+  // Footer link to the privacy policy — shown in every view as a standing reassurance that
+  // "everything stays local" (task 12).
+  privacyLink: 'Soukromí',
+
   onboarding: {
     claim: 'Kolik vyděláš čistého za hodinu? Ceny na webech ti převedeme na čas.',
     presetLegend: 'Rychlá volba sazby',
