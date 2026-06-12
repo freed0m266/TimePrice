@@ -26,12 +26,15 @@ export default defineConfig({
         },
       },
       {
-        // DOM-bound engine tests (scanner, mutator, observer) — added in tasks 06–08.
+        // DOM-bound engine tests (scanner, mutator, observer) — added in tasks 06–08 — plus the
+        // fixture-based integration + adapter-regression layer (task 14), which loads the saved
+        // e-shop snapshots in tests/fixtures/ and runs the full chain. (Playwright E2E in
+        // tests/e2e/ is a separate runner — `pnpm test:e2e` — not part of this Vitest project.)
         extends: true,
         test: {
           name: 'jsdom',
           environment: 'jsdom',
-          include: ['tests/dom/**/*.test.ts'],
+          include: ['tests/dom/**/*.test.ts', 'tests/integration/**/*.test.ts'],
         },
       },
     ],
