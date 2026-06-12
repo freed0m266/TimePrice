@@ -4,8 +4,9 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   main() {
-    // Baseline one-shot activation (task 07). The MutationObserver (task 08) and live
-    // settings reaction (task 09) extend this; for now we convert once after load.
+    // Activate the live content engine: first pass + MutationObserver + settings reaction
+    // (tasks 07–08). The returned teardown is unused here — the page lifetime tears
+    // everything down — but exists for deterministic teardown in tests.
     void run();
   },
 });
