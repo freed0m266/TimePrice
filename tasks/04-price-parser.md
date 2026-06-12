@@ -1,6 +1,6 @@
 # 04 — Price parser: CZK formáty, měnová kotva, normalizace
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** L · **Dopad:** Blokující
 
