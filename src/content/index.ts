@@ -21,8 +21,10 @@ import type { ConversionContext } from '@core/convert';
 
 import { adapterScan } from './adapters/engine';
 import { getAdapter } from './adapters/registry';
-import { applyAll, reformatAll, revertAll } from './mutator';
+import { reformatAll, revertAll } from './mutator';
 import { startObserving } from './observer';
+import { profiler } from './perf/profiler';
+import { createScheduler, type Scheduler } from './perf/scheduler';
 
 /**
  * Activate TimePrice on the current page and keep it live until the returned teardown is
@@ -34,6 +36,7 @@ export async function run(): Promise<() => void> {
   let ctx = contextFor(initial);
   let active = false;
   let stopObserver: (() => void) | null = null;
+  let scheduler: Scheduler | null = null;
 
   // The site adapter is fixed by the host for the page's lifetime (task 10). `null` (no
   // adapter / unsupported domain) drives the generic engine; a supported domain narrows the
@@ -41,14 +44,21 @@ export async function run(): Promise<() => void> {
   const adapter = getAdapter(location.host);
 
   const activate = (): void => {
-    applyAll(adapterScan(adapter), ctx); // first pass before observing, so it isn't a self-mutation race
-    stopObserver = startObserving(ctx, adapter);
+    profiler.reset();
+    // The scheduler owns the perf-aware "convert" side (task 11): viewport-first, idle-batched,
+    // page-capped. `() => ctx` is read at conversion time so deferred (off-viewport) candidates
+    // pick up a later rate change automatically — no observer restart needed.
+    scheduler = createScheduler(() => ctx);
+    scheduler.submit(adapterScan(adapter)); // first pass — gated/deferred by the scheduler
+    stopObserver = startObserving(scheduler, adapter);
     active = true;
   };
 
   const deactivate = (): void => {
     stopObserver?.(); // stop observing first, so reverting prices isn't re-converted
     stopObserver = null;
+    scheduler?.teardown(); // drop the IntersectionObserver + any candidates queued off-viewport
+    scheduler = null;
     revertAll();
     active = false;
   };
@@ -67,11 +77,10 @@ export async function run(): Promise<() => void> {
       const nextCtx = contextFor(next);
       if (contextChanged(ctx, nextCtx)) {
         ctx = nextCtx;
-        // Cheaply re-format the spans already on the page, then re-arm the observer so any
-        // subtree it converts from now on uses the new rate too.
-        stopObserver?.();
+        // Re-format the spans already on the page. Candidates the scheduler hasn't converted
+        // yet (still off-viewport) will pick up the new `ctx` via its `() => ctx` getter, so
+        // the observer needs no restart.
         reformatAll(ctx);
-        stopObserver = startObserving(ctx, adapter);
       }
     }
   });
@@ -80,6 +89,8 @@ export async function run(): Promise<() => void> {
     unsubscribe();
     stopObserver?.();
     stopObserver = null;
+    scheduler?.teardown();
+    scheduler = null;
     active = false;
   };
 }

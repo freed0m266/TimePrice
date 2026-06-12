@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adapterScan } from '@/content/adapters/engine';
 import { GENERIC_FALLBACK, getAdapter } from '@/content/adapters/registry';
 import { startObserving } from '@/content/observer';
+import { createScheduler, type Scheduler } from '@/content/perf/scheduler';
 import { applyAll } from '@/content/mutator';
 import { alza } from '@/content/adapters/sites/alza';
 import { mall } from '@/content/adapters/sites/mall';
@@ -299,6 +300,9 @@ describe('adapter + observer — live conversion', () => {
   };
 
   let stop: (() => void) | null = null;
+  // jsdom lacks IntersectionObserver → the scheduler converts eagerly inside frame processing,
+  // so these adapter-integration tests keep their frame-driven flow (see observer.test.ts).
+  let scheduler: Scheduler;
   const initialUrl = location.href;
   const nativePushState = history.pushState;
   const nativeReplaceState = history.replaceState;
@@ -312,15 +316,25 @@ describe('adapter + observer — live conversion', () => {
     vi.stubGlobal('cancelAnimationFrame', (id: number) => {
       if (id >= 1 && id <= frames.length) frames[id - 1] = () => {};
     });
+    // Leap `performance.now` forward each read so the throttle always picks the rAF path.
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => {
+      const v = clock;
+      clock += 1_000_000;
+      return v;
+    });
+    scheduler = createScheduler(() => CTX);
   });
 
   afterEach(() => {
     stop?.();
     stop = null;
+    scheduler.teardown();
     history.pushState = nativePushState;
     history.replaceState = nativeReplaceState;
     history.replaceState({}, '', initialUrl);
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   const tpSpans = () => document.querySelectorAll('[data-timeprice]');
@@ -328,7 +342,7 @@ describe('adapter + observer — live conversion', () => {
   it('converts a dynamically-added card inside a price selector, ignoring prices outside', () => {
     // A pre-existing container keeps the adapter "healthy" (not stale).
     document.body.innerHTML = '<div class="price-box__price">100 Kč</div>';
-    stop = startObserving(CTX, alza);
+    stop = startObserving(scheduler, alza);
 
     document.body.insertAdjacentHTML('beforeend', '<div class="price-box__price">30 000 Kč</div>');
     document.body.insertAdjacentHTML('beforeend', '<div class="banner">9 999 Kč</div>');
@@ -344,7 +358,7 @@ describe('adapter + observer — live conversion', () => {
 
   it('falls back to the generic engine for dynamic content when the adapter is stale', async () => {
     // No alza selectors anywhere → adapter stale → the observer converts via generic anchored scan.
-    stop = startObserving(CTX, alza);
+    stop = startObserving(scheduler, alza);
     document.body.insertAdjacentHTML('beforeend', '<div class="redesigned">2 500 Kč</div>');
 
     await settle();
@@ -356,7 +370,7 @@ describe('adapter + observer — live conversion', () => {
   it('re-applies after a React-style re-render overwrites our span (no loop)', async () => {
     document.body.innerHTML = '<div id="host"></div>';
     const host = document.getElementById('host')!;
-    stop = startObserving(CTX, notino);
+    stop = startObserving(scheduler, notino);
 
     host.innerHTML = '<div data-testid="pd-price">30 000 Kč</div>';
     await settle();

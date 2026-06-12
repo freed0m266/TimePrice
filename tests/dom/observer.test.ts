@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { startObserving } from '@/content/observer';
+import { createScheduler, type Scheduler } from '@/content/perf/scheduler';
 import type { ConversionContext } from '@core/convert';
 
 // 1000 Kč/h, 8h day, 5d week, auto rounding → 30 000 Kč = 30 h.
@@ -28,6 +29,11 @@ const settle = async (): Promise<void> => {
 };
 
 let stop: (() => void) | null = null;
+// jsdom has no IntersectionObserver, so the scheduler runs its eager (synchronous) path:
+// conversions happen inside the observer's frame processing, exactly as before task 11. The
+// viewport-gated path is exercised in scheduler.test.ts; the throttle/watchdog in
+// observer-throttle.test.ts.
+let scheduler: Scheduler;
 const initialUrl = location.href;
 const nativePushState = history.pushState;
 const nativeReplaceState = history.replaceState;
@@ -41,11 +47,22 @@ beforeEach(() => {
   vi.stubGlobal('cancelAnimationFrame', (id: number) => {
     if (id >= 1 && id <= frames.length) frames[id - 1] = () => {};
   });
+  // Make `performance.now` leap forward on every read so the observer throttle always sees a
+  // wide gap and picks the rAF (fast) path — keeping these tests on the frame queue they
+  // already drive. (The throttle's timer path is covered in observer-throttle.test.ts.)
+  let clock = 0;
+  vi.spyOn(performance, 'now').mockImplementation(() => {
+    const v = clock;
+    clock += 1_000_000;
+    return v;
+  });
+  scheduler = createScheduler(() => CTX);
 });
 
 afterEach(() => {
   stop?.();
   stop = null;
+  scheduler.teardown();
   document.body.innerHTML = '';
   document.getElementById('tp-style')?.remove();
   // Fully reset history between tests, even if a test layered a wrapper our stop() declined
@@ -54,13 +71,14 @@ afterEach(() => {
   history.replaceState = nativeReplaceState;
   history.replaceState({}, '', initialUrl); // undo any pushState a test performed
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 const tpSpans = () => document.querySelectorAll('[data-timeprice]');
 
 describe('observer — dynamic content', () => {
   it('converts a price added after the observer starts (on the next frame)', async () => {
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     document.body.insertAdjacentHTML('beforeend', '<span>30 000 Kč</span>');
 
     await settle();
@@ -74,7 +92,7 @@ describe('observer — dynamic content', () => {
   });
 
   it('batches many added nodes and scans only their topmost subtrees', async () => {
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     document.body.insertAdjacentHTML(
       'beforeend',
       '<div><span>30 000 Kč</span></div><p>24 000 Kč</p>',
@@ -90,7 +108,7 @@ describe('observer — dynamic content', () => {
 
   it('converts text changed in place (characterData)', async () => {
     document.body.innerHTML = '<span>cena bude brzy</span>';
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
 
     // SPA mutates the existing text node's content rather than swapping the node.
     document.querySelector('span')!.firstChild!.nodeValue = '30 000 Kč';
@@ -104,7 +122,7 @@ describe('observer — dynamic content', () => {
 
 describe('observer — no infinite loop', () => {
   it('does not schedule a follow-up frame for its own writes', async () => {
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     document.body.insertAdjacentHTML('beforeend', '<span>30 000 Kč</span>');
 
     await settle();
@@ -126,7 +144,7 @@ describe('observer — survives framework re-renders', () => {
   it('re-applies when a framework overwrites our span with the original price', async () => {
     document.body.innerHTML = '<div id="host"></div>';
     const host = document.getElementById('host')!;
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
 
     host.innerHTML = '<span>30 000 Kč</span>';
     await settle();
@@ -149,7 +167,7 @@ describe('observer — SPA navigation', () => {
     // Content present before observing is NOT scanned (the observer only reacts to changes),
     // so it stays raw until navigation forces a full pass.
     document.body.innerHTML = '<span>30 000 Kč</span>';
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
 
     await settle();
     flushFrames();
@@ -163,7 +181,7 @@ describe('observer — SPA navigation', () => {
   });
 
   it('ignores a pushState that does not actually change the URL', async () => {
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     flushFrames(); // drain anything pending
 
     history.pushState({}, '', location.href); // same URL → no re-scan scheduled
@@ -173,7 +191,7 @@ describe('observer — SPA navigation', () => {
 
 describe('observer — teardown', () => {
   it('stops reacting to DOM changes after stop()', async () => {
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     stop();
     stop = null;
 
@@ -188,7 +206,7 @@ describe('observer — teardown', () => {
 
   it('stops reacting to navigation after stop() and restores history', () => {
     const nativePushState = history.pushState;
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
     expect(history.pushState).not.toBe(nativePushState); // patched while observing
 
     stop();
@@ -202,7 +220,7 @@ describe('observer — teardown', () => {
   it('stays inert after teardown even when another script wrapped our history patch', () => {
     // A pre-existing price the observer never converted (it only reacts to mutations).
     document.body.innerHTML = '<span>30 000 Kč</span>';
-    stop = startObserving(CTX);
+    stop = startObserving(scheduler);
 
     // A third party wraps OUR patched pushState (common in SPAs / analytics). stop() then
     // cannot safely un-patch — but it must still stop us from reacting to navigation.

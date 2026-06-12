@@ -52,21 +52,37 @@ const SPAN_CLASS = 'tp-converted';
 const STYLE_TEXT = '[data-timeprice]{color:inherit;font:inherit;text-decoration:inherit;}';
 
 /**
- * Convert every candidate's prices in place, at the given rate/context.
+ * Convert every candidate's prices in place, at the given rate/context. Returns the number of
+ * prices actually converted (skipped/stale matches don't count) so callers can enforce a
+ * per-page conversion cap (task 11 §4).
  *
  * Order across candidates is irrelevant (each is an independent text node); within a node
  * the matches are replaced back-to-front so earlier offsets stay valid.
  */
-export function applyAll(candidates: PriceCandidate[], ctx: ConversionContext): void {
-  for (const candidate of candidates) applyToCandidate(candidate, ctx);
+export function applyAll(candidates: PriceCandidate[], ctx: ConversionContext): number {
+  let converted = 0;
+  for (const candidate of candidates) converted += applyToCandidate(candidate, ctx);
+  return converted;
 }
 
-/** Convert a single candidate's matches in place. Exported for per-subtree use (task 08). */
-export function applyToCandidate(candidate: PriceCandidate, ctx: ConversionContext): void {
+/**
+ * Convert a single candidate's matches in place. Returns how many prices were converted.
+ * Exported for per-subtree use (task 08) and per-candidate use by the scheduler (task 11).
+ *
+ * `limit` caps how many of this node's matches are converted (default: all). The scheduler
+ * passes the page's remaining cap allowance so a multi-price node can't overshoot the hard cap
+ * (task 11 §4). Matches are converted back-to-front, so a partial conversion leaves the
+ * earliest prices raw — harmless: they are just unconverted, like any off-screen price.
+ */
+export function applyToCandidate(
+  candidate: PriceCandidate,
+  ctx: ConversionContext,
+  limit = Infinity,
+): number {
   const node = candidate.node;
   const doc = node.ownerDocument;
-  if (!doc || !node.isConnected) return; // detached / stale candidate
-  if (isInProcessedSpan(node)) return; // defensive idempotency guard
+  if (!doc || !node.isConnected) return 0; // detached / stale candidate
+  if (isInProcessedSpan(node)) return 0; // defensive idempotency guard
 
   ensureStyles(doc);
 
@@ -74,21 +90,27 @@ export function applyToCandidate(candidate: PriceCandidate, ctx: ConversionConte
   // `node` and the still-unprocessed (earlier) matches keep their original offsets. We sort
   // a copy rather than trust input order — the offset invariant is too important to assume.
   const ordered = [...candidate.matches].sort((a, b) => b.start - a.start);
-  for (const match of ordered) applyMatch(node, match, ctx, doc);
+  let converted = 0;
+  for (const match of ordered) {
+    if (converted >= limit) break;
+    converted += applyMatch(node, match, ctx, doc);
+  }
+  return converted;
 }
 
 /**
- * Replace one match inside `node` with a converted-price span.
+ * Replace one match inside `node` with a converted-price span. Returns 1 if it converted, 0
+ * if it left the node untouched.
  *
  * The offset guard makes this safe to call on a node that has changed since scanning: if
  * the exact original substring is no longer at `[start, end)` we leave the node alone.
  */
-function applyMatch(node: Text, match: PriceMatch, ctx: ConversionContext, doc: Document): void {
-  if (match.end > node.data.length) return;
-  if (node.data.slice(match.start, match.end) !== match.raw) return;
+function applyMatch(node: Text, match: PriceMatch, ctx: ConversionContext, doc: Document): number {
+  if (match.end > node.data.length) return 0;
+  if (node.data.slice(match.start, match.end) !== match.raw) return 0;
 
   const result = formatTime(match.value, ctx);
-  if (result.display === '') return; // invalid rate/price — leave the original untouched
+  if (result.display === '') return 0; // invalid rate/price — leave the original untouched
 
   // Isolate the matched substring as its own text node, splitting only where needed so no
   // empty text nodes are left behind.
@@ -105,6 +127,7 @@ function applyMatch(node: Text, match: PriceMatch, ctx: ConversionContext, doc: 
   setTooltip(span, match.raw);
 
   priceNode.replaceWith(span);
+  return 1;
 }
 
 /**

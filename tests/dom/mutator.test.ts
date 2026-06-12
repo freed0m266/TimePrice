@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { applyAll, reformatAll, revertAll, revertSpan } from '@/content/mutator';
+import { applyAll, applyToCandidate, reformatAll, revertAll, revertSpan } from '@/content/mutator';
 import { scan } from '@/content/scanner';
 import type { ConversionContext } from '@core/convert';
 
@@ -173,5 +173,20 @@ describe('mutator — multiple matches in one node', () => {
     revertAll();
     expect(document.body.textContent).toBe(original);
     expect(tpSpans()).toHaveLength(0);
+  });
+
+  it('honors a per-node conversion limit (back-to-front), returning the count converted', () => {
+    // The scheduler passes its remaining cap allowance as a limit so a multi-price node can't
+    // overshoot the page cap (task 11 §4). The limit converts the latest matches first.
+    render('<span>199 Kč, 299 Kč, 399 Kč</span>');
+    const [candidate] = scan();
+    const converted = applyToCandidate(candidate!, CTX, 2);
+
+    expect(converted).toBe(2);
+    expect(tpSpans()).toHaveLength(2);
+    // Back-to-front: the two highest-offset prices convert; the first stays raw.
+    expect(document.body.textContent).toContain('199 Kč');
+    expect(document.body.textContent).not.toContain('299 Kč');
+    expect(document.body.textContent).not.toContain('399 Kč');
   });
 });
