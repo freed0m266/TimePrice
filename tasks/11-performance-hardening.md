@@ -1,6 +1,6 @@
 # 11 — Performance hardening (batching, idle, viewport-first, caps)
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** M · **Dopad:** Vysoký
 
