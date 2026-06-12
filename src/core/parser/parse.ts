@@ -8,7 +8,12 @@ import { SPACE_CLASS, parseCzkNumber } from './normalize';
 // Number core. Grouped (thousands separators + optional decimal) is tried before plain so
 // "30 000" wins over a bare "30". A grouped dot is only ever a thousands separator (it
 // must be followed by exactly three digits); the CZK decimal mark is always a comma.
-const NUMBER = `(?:\\d{1,3}(?:[${SPACE_CLASS}.]\\d{3})+(?:,\\d{1,2})?|\\d+(?:,\\d{1,2})?)`;
+//
+// Exported as a regex SOURCE string (not a compiled regex) so the content scanner's
+// anchorless adapter path (task 10) reuses the exact same number grammar — one source of
+// truth for "what a CZK number looks like" — while the anchorless ASSEMBLY stays out of
+// this pure core module (the generic parser never matches without an anchor).
+export const NUMBER = `(?:\\d{1,3}(?:[${SPACE_CLASS}.]\\d{3})+(?:,\\d{1,2})?|\\d+(?:,\\d{1,2})?)`;
 const WS = `[${SPACE_CLASS}]`;
 const SYMBOL = `(?:Kč|CZK)`;
 
@@ -22,7 +27,9 @@ const SYMBOL = `(?:Kč|CZK)`;
 //      digit-only strings.
 // Crucially it rejects only `<digit><sep>`, never `<letter/space><sep>`, so a normal price
 // after a word space ("od 499 Kč") still matches.
-const LEAD = `(?<![-\\d\\u2212])(?<!\\d[${SPACE_CLASS}.,])`;
+// Exported (as a regex source) for reuse by the scanner's anchorless adapter path — see the
+// `NUMBER` note above.
+export const LEAD = `(?<![-\\d\\u2212])(?<!\\d[${SPACE_CLASS}.,])`;
 
 // Three anchored branches, matched directly over the original text so each match's
 // [index, index+length) range is the exact substring (offset invariant). Each quantifier

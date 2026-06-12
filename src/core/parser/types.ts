@@ -16,8 +16,13 @@ export interface PriceMatch {
   end: number;
   /** The exact matched substring, including the anchor (e.g. "30 000 Kč"). */
   raw: string;
-  /** How the currency anchor was detected — for debug and adapter logic. */
-  anchor: 'kc' | 'czk' | 'dash'; // "Kč" | "CZK" | ",-"
+  /**
+   * How the currency anchor was detected — for debug and adapter logic.
+   * `'none'` is never produced by the generic parser (which always requires an anchor); it
+   * tags a number matched anchorless by a site adapter inside an explicit price selector,
+   * where the currency is implied by the selector scope (task 10).
+   */
+  anchor: 'kc' | 'czk' | 'dash' | 'none'; // "Kč" | "CZK" | ",-" | implied-by-selector
 }
 
 export interface ParseOptions {
