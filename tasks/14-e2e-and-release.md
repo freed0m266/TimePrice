@@ -1,6 +1,6 @@
 # 14 — E2E testy na fixturách + QA matice + release checklist
 
-**Status:** Todo
+**Status:** Done — 2026-06-12
 
 **Priorita:** v1.0 · **Úsilí:** M · **Dopad:** Vysoký (release gate)
 
