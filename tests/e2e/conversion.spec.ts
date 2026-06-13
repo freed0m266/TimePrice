@@ -15,7 +15,7 @@ test('alza adapter binds by host: detail + cards convert, comparison/out-of-cont
 
   await expect(page.locator('.price-box__price')).toContainText('30 h'); // detail main
   await expect(page.locator('.c2-price-final')).toContainText('7 h'); // listing card
-  await expect(page.locator('[data-testid="pricePrimary"]')).toHaveText('2 h'); // 1 990 Kč
+  await expect(page.locator('[data-testid="pricePrimary"]')).toHaveText('1 h, 59 min'); // 1 990 Kč
 
   // Ignored + out-of-container prices stay raw.
   await expect(page.locator('.price-box__compare-price')).toHaveText('35 000 Kč');

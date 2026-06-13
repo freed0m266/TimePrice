@@ -7,10 +7,10 @@
 // rewrite of scan/mutate/observe. The MVP ships exactly one: `TimeConverter`.
 
 /**
- * How fractional results are rounded for display. Structurally identical to the settings
- * `Rounding`, but redeclared here on purpose: `src/core` must not import the settings
- * layer (ESLint enforces it). Callers map `AppSettings.rounding` straight onto this — the
- * string unions match, so the assignment is type-safe.
+ * Legacy rounding strategy. Once selected the decimal precision of a single-unit display;
+ * now IGNORED by `TimeConverter`, which always shows two units (the second unit supplies the
+ * precision). Kept here — and structurally identical to the settings `Rounding` — only so stored
+ * settings keep validating (`src/core` must not import the settings layer; ESLint enforces it).
  */
 export type Rounding = 'auto' | 'tenths' | 'whole';
 
@@ -25,19 +25,19 @@ export interface ConversionContext {
   workdayHours: number;
   /** Workdays in a week. Default 5 — sets the hours→days threshold (one workweek). */
   workweekDays: number;
-  /** How fractional results are rounded for display. */
+  /** Legacy rounding strategy — ignored by the current two-unit converter (see {@link Rounding}). */
   rounding: Rounding;
 }
 
-/** Selected output unit. Exposed for tests and future per-unit styling (task 07). */
-export type TimeUnit = 'min' | 'h' | 'day';
+/** The largest (primary) unit chosen for `display`. Exposed for tests and future per-unit styling. */
+export type TimeUnit = 's' | 'min' | 'h' | 'day';
 
 export interface ConversionResult {
-  /** Ready-to-insert human string, e.g. `"30 h"`, `"7,5 d"`, `"<1 min"`. */
+  /** Ready-to-insert human string — the top two time units, e.g. `"1 h, 59 min"`, `"62 d, 4 h"`, `"46 s"`. */
   display: string;
   /** Machine value in hours, unrounded — for the tooltip and future sorting. */
   hours: number;
-  /** The auto-scaled unit chosen for `display`. */
+  /** The largest (primary) unit shown in `display`. */
   unit: TimeUnit;
 }
 

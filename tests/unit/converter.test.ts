@@ -21,44 +21,68 @@ function ctx(overrides: Partial<ConversionContext> = {}): ConversionContext {
   };
 }
 
-describe('formatTime — auto-scaling unit selection', () => {
-  it('shows minutes under one hour', () => {
-    const r = formatTime(19, ctx()); // 0.019 h → 1.14 min
-    expect(r.display).toBe('1 min');
-    expect(r.unit).toBe('min');
-    expect(r.hours).toBeCloseTo(0.019, 6);
+describe('formatTime — two-unit band selection', () => {
+  it('seconds band: under a minute shows just seconds', () => {
+    const r = formatTime(12.9, ctx()); // 0.0129 h = 46.44 s
+    expect(r.display).toBe('46 s');
+    expect(r.unit).toBe('s');
+    expect(r.hours).toBeCloseTo(0.0129, 6);
   });
 
-  it('rolls 60-rounded minutes up to "1 h" rather than "60 min"', () => {
-    // 999 / 1000 = 0.999 h = 59.94 min → rounds to 60 → must escalate to hours.
+  it('minutes band: shows minutes + seconds', () => {
+    expect(formatTime(18, ctx()).display).toBe('1 min, 5 s'); // 64.8 s
+    expect(formatTime(99, ctx()).display).toBe('5 min, 56 s'); // 356.4 s
+    expect(formatTime(18, ctx()).unit).toBe('min');
+  });
+
+  it('minutes band: drops a zero second unit', () => {
+    // rate 1200, price 40 → 40/1200 h = exactly 120 s = 2 min, 0 s.
+    expect(formatTime(40, ctx({ netHourlyRateCzk: 1200 })).display).toBe('2 min');
+  });
+
+  it('hours band: shows hours + minutes, drops a zero minute unit', () => {
+    expect(formatTime(1990, ctx()).display).toBe('1 h, 59 min'); // 1.99 h
+    expect(formatTime(30000, ctx()).display).toBe('30 h'); // exactly 30 h
+    expect(formatTime(7000, ctx()).display).toBe('7 h');
+    expect(formatTime(1990, ctx()).unit).toBe('h');
+  });
+
+  it('days band: shows days + hours, drops a zero hour unit', () => {
+    expect(formatTime(500000, ctx()).display).toBe('62 d, 4 h'); // 500 h → 62 d 4 h
+    expect(formatTime(2000000, ctx()).display).toBe('250 d'); // 2000 h / 8 = 250 d exactly
+    expect(formatTime(500000, ctx()).unit).toBe('day');
+    expect(formatTime(500000, ctx()).hours).toBe(500);
+  });
+});
+
+describe('formatTime — band thresholds & carries', () => {
+  it('keeps the exact 40 h workweek threshold in hours, tips just past it to days', () => {
+    expect(formatTime(40000, ctx()).display).toBe('40 h'); // == threshold
+    const past = formatTime(40001, ctx()); // 40.001 h → days, rounds to 40 h → 5 d 0 h
+    expect(past.unit).toBe('day');
+    expect(past.display).toBe('5 d');
+  });
+
+  it('carries 60 rounded minutes up to "1 h" rather than "60 min"', () => {
+    // 999 / 1000 = 0.999 h = 59.94 min → rounds to 60 → escalates to the hours band.
     const r = formatTime(999, ctx());
     expect(r.display).toBe('1 h');
     expect(r.unit).toBe('h');
   });
 
-  it('shows whole hours within the workweek band', () => {
-    const r = formatTime(30000, ctx()); // 30 h ≤ 40 h
-    expect(r.display).toBe('30 h');
-    expect(r.unit).toBe('h');
-    expect(r.hours).toBe(30);
+  it('carries 60 rounded seconds up to "1 min" rather than "60 s"', () => {
+    expect(formatTime(16.5, ctx()).display).toBe('59 s'); // 59.4 s → 59
+    expect(formatTime(16.7, ctx()).display).toBe('1 min'); // 60.12 s → 60 → 1 min
   });
+});
 
-  it('keeps the exact threshold (40 h) in hours, tips just past it to days', () => {
-    expect(formatTime(40000, ctx()).display).toBe('40 h'); // == threshold
-    const past = formatTime(40001, ctx()); // 40.001 h → days
-    expect(past.unit).toBe('day');
-    expect(past.display).toBe('5 d'); // 40.001 / 8 = 5.0001 → 5,0 → "5"
-  });
-
-  it('scales large amounts to workdays with a Czech decimal comma', () => {
-    const r = formatTime(500000, ctx()); // 500 h → 62.5 d
-    expect(r.display).toBe('62,5 d');
-    expect(r.unit).toBe('day');
-    expect(r.hours).toBe(500);
-  });
-
-  it('drops a trailing ,0 on whole day counts', () => {
-    expect(formatTime(2000000, ctx()).display).toBe('250 d'); // 2000 h / 8 = 250 d
+describe('formatTime — the discount-on-a-cheap-item case (precision)', () => {
+  it('distinguishes a small price from its discounted price (both used to round to "1 min")', () => {
+    const original = formatTime(16, ctx()); // 57.6 s
+    const discounted = formatTime(12.8, ctx()); // -20% → 46.08 s
+    expect(original.display).toBe('58 s');
+    expect(discounted.display).toBe('46 s');
+    expect(original.display).not.toBe(discounted.display); // the whole point of the change
   });
 });
 
@@ -67,8 +91,8 @@ describe('formatTime — hourly rate drives the result', () => {
     // 30000 Kč at 500 / 1000 / 1500 Kč/h = 60 / 30 / 20 h.
     const low = formatTime(30000, ctx({ netHourlyRateCzk: 500 }));
     expect(low.hours).toBe(60);
-    expect(low.unit).toBe('day'); // 60 h > 40 h → 7.5 d
-    expect(low.display).toBe('7,5 d');
+    expect(low.unit).toBe('day'); // 60 h > 40 h → 7 d 4 h
+    expect(low.display).toBe('7 d, 4 h');
 
     expect(formatTime(30000, ctx({ netHourlyRateCzk: 1000 })).display).toBe('30 h');
 
@@ -78,22 +102,14 @@ describe('formatTime — hourly rate drives the result', () => {
   });
 });
 
-describe('formatTime — rounding modes', () => {
-  it('auto rounds hours to whole and half up', () => {
-    expect(formatTime(9500, ctx({ rounding: 'auto' })).display).toBe('10 h'); // 9.5 → 10
-    expect(formatTime(9000, ctx({ rounding: 'auto' })).display).toBe('9 h');
-  });
-
-  it('tenths always keeps one decimal, even a trailing zero', () => {
-    expect(formatTime(9000, ctx({ rounding: 'tenths' })).display).toBe('9,0 h');
-    expect(formatTime(9500, ctx({ rounding: 'tenths' })).display).toBe('9,5 h');
-    expect(formatTime(500000, ctx({ rounding: 'tenths' })).display).toBe('62,5 d');
-  });
-
-  it('whole rounds both hours and days to integers', () => {
-    expect(formatTime(9500, ctx({ rounding: 'whole' })).display).toBe('10 h');
-    // 500 h / 8 = 62.5 d → rounds half up to 63.
-    expect(formatTime(500000, ctx({ rounding: 'whole' })).display).toBe('63 d');
+describe('formatTime — rounding setting is ignored (two units supply precision)', () => {
+  it('every rounding mode yields the identical two-unit display', () => {
+    const modes: Rounding[] = ['auto', 'tenths', 'whole'];
+    for (const rounding of modes) {
+      expect(formatTime(9000, ctx({ rounding })).display).toBe('9 h'); // no "9,0 h"
+      expect(formatTime(1990, ctx({ rounding })).display).toBe('1 h, 59 min');
+      expect(formatTime(500000, ctx({ rounding })).display).toBe('62 d, 4 h'); // no "62,5 d"
+    }
   });
 });
 
@@ -101,10 +117,10 @@ describe('formatTime — workday length moves the day threshold', () => {
   it('a shorter workday tips mid-range hours into days', () => {
     // 35 h: with an 8 h day (threshold 40 h) it is still hours…
     expect(formatTime(35000, ctx({ workdayHours: 8 })).display).toBe('35 h');
-    // …with a 6 h day (threshold 30 h) it becomes days: 35 / 6 = 5.833 → "5,8 d".
+    // …with a 6 h day (threshold 30 h) it becomes days: 35 h = 5 workdays + 5 h.
     const sixHourDay = formatTime(35000, ctx({ workdayHours: 6 }));
     expect(sixHourDay.unit).toBe('day');
-    expect(sixHourDay.display).toBe('5,8 d');
+    expect(sixHourDay.display).toBe('5 d, 5 h');
   });
 
   it('falls back to 8 h / 5 day defaults when the context carries non-positive values', () => {
@@ -115,15 +131,15 @@ describe('formatTime — workday length moves the day threshold', () => {
 });
 
 describe('formatTime — small and degenerate inputs', () => {
-  it('shows "<1 min" for a positive price below one minute', () => {
-    const r = formatTime(1, ctx()); // 0.001 h = 0.06 min → rounds to 0
-    expect(r.display).toBe('<1 min');
-    expect(r.unit).toBe('min');
+  it('shows "<1 s" for a positive price below one second', () => {
+    const r = formatTime(0.01, ctx()); // 0.036 s → rounds to 0
+    expect(r.display).toBe('<1 s');
+    expect(r.unit).toBe('s');
   });
 
-  it('shows "0 min" for a zero price', () => {
+  it('shows "0 s" for a zero price', () => {
     const r = formatTime(0, ctx());
-    expect(r.display).toBe('0 min');
+    expect(r.display).toBe('0 s');
     expect(r.hours).toBe(0);
   });
 
@@ -158,12 +174,5 @@ describe('converter registry', () => {
   it('formatTime delegates to the time converter', () => {
     const c = ctx();
     expect(formatTime(30000, c)).toStrictEqual(timeConverter.convert(30000, c));
-  });
-
-  it('the time converter accepts every rounding mode', () => {
-    const modes: Rounding[] = ['auto', 'tenths', 'whole'];
-    for (const rounding of modes) {
-      expect(formatTime(30000, ctx({ rounding })).display).toMatch(/\d/);
-    }
   });
 });

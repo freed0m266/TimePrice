@@ -46,7 +46,7 @@ Core logic changes (`parser`, `convert`) require passing unit tests. DOM changes
 
 ## Conventions
 
-- Smart time unit output uses Czech decimal comma (`3,75 d`), compact suffixes (`min` / `h` / `d`).
+- Time output shows the **top two units** (ladder `d`→`h`→`min`→`s`, a "day" = `workdayHours`), e.g. `1 h, 59 min`, `62 d, 4 h`, `46 s`; a zero second unit is dropped (`30 h`). The legacy `rounding` setting is ignored by the converter (kept only for stored-settings compat).
 - Per-site state and blocklist key on `registrableDomain` (`www.alza.cz` → `alza.cz`).
 - Settings read merges over `DEFAULT_SETTINGS` — missing keys default, no migrations until `schemaVersion` bumps.
 - Content engine stays framework-free; Svelte is popup-only.

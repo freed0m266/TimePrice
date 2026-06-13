@@ -77,8 +77,8 @@ describe('edge cases', () => {
     convertGeneric('edge/unit-price.html');
     expect(convertedValues()).toEqual([199, 299]);
     const text = document.body.textContent ?? '';
-    expect(text).toContain('12 min/kg'); // 199 Kč → 12 min, "/kg" kept
-    expect(text).toContain('18 min / měsíc'); // 299 Kč → 18 min, "/ měsíc" kept
+    expect(text).toContain('11 min, 56 s/kg'); // 199 Kč → 716 s, "/kg" kept
+    expect(text).toContain('17 min, 56 s / měsíc'); // 299 Kč → 1076 s, "/ měsíc" kept
     expect(text).not.toContain('199 Kč');
   });
 

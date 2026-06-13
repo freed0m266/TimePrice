@@ -34,7 +34,7 @@ const CASES: Case[] = [
     host: 'datart.cz',
     fixture: '/sites/datart.html',
     detailSelector: '.product-price__main',
-    detailText: '5 h', // 4 990 Kč
+    detailText: '4 h, 59 min', // 4 990 Kč
     ignoredSelector: '.product-price__old',
     ignoredText: '5 990 Kč',
   },
@@ -52,7 +52,7 @@ const CASES: Case[] = [
     host: 'notino.cz',
     fixture: '/sites/notino.html',
     detailSelector: '[data-testid="pd-price"]',
-    detailText: '30 min', // 499 Kč
+    detailText: '29 min, 56 s', // 499 Kč
     ignoredSelector: 'del',
     ignoredText: '699 Kč',
   },

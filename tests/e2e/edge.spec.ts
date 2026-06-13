@@ -19,8 +19,8 @@ test('split price: amount and Kč in separate elements is left untouched (no art
 
 test('unit price: the amount converts and the per-unit suffix is preserved', async ({ page }) => {
   await page.goto(fixtureUrl('shop.example', '/edge/unit-price.html'));
-  await expect(page.locator('body')).toContainText('12 min/kg'); // 199 Kč → 12 min
-  await expect(page.locator('body')).toContainText('18 min / měsíc'); // 299 Kč → 18 min
+  await expect(page.locator('body')).toContainText('11 min, 56 s/kg'); // 199 Kč → 716 s
+  await expect(page.locator('body')).toContainText('17 min, 56 s / měsíc'); // 299 Kč → 1076 s
   await expect(page.locator('body')).not.toContainText('199 Kč');
 });
 
