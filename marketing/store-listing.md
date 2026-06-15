@@ -56,7 +56,8 @@ live in [`store/`](store/).
 >
 > **Ovládání**
 > • Globální vypínač i přepínač pro jednotlivé weby.
-> • Chytré jednotky a české formátování (`3,75 d`).
+> • Chytré jednotky — ukazuje dvě nejbližší (např. `1 h, 59 min` nebo `46 s`), ať i levné
+>   položky a slevy dávají smysl.
 >
 > **Kde to fungovat má**
 > Optimalizováno pro přední české e-shopy — Alza, Mall, Datart, CZC a Notino — a navíc funguje
@@ -152,10 +153,9 @@ Required certifications (all true for TimePrice):
   purpose.
 - ✅ I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
-**Privacy policy URL:** the hosted copy of [`privacy-policy.html`](privacy-policy.html)
-(GitHub Pages — finalize URL at submission; planned
-`https://freed0m266.github.io/TimePrice/privacy-policy.html`, mirrored in
-[`src/constants/urls.ts`](../src/constants/urls.ts)).
+**Privacy policy URL:** `https://martinfreedom.com/timeprice/privacy-policy.html` — the hosted
+copy of [`privacy-policy.html`](privacy-policy.html), mirrored in
+[`src/constants/urls.ts`](../src/constants/urls.ts).
 
 ---
 
