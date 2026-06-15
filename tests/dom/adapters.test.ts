@@ -13,6 +13,8 @@ import { notino } from '@/content/adapters/sites/notino';
 import type { SiteAdapter } from '@/content/adapters/types';
 import type { ConversionContext } from '@core/convert';
 
+import { visibleText } from '../visible-text';
+
 // 1000 Kč/h, 8h day, 5d week, auto rounding → 30 000 Kč = 30 h.
 const CTX: ConversionContext = {
   netHourlyRateCzk: 1000,
@@ -279,7 +281,7 @@ describe('adapter + mutator — in-place conversion respects ignore', () => {
     applyAll(adapterScan(alza, document.body), CTX);
 
     expect(document.querySelectorAll('[data-timeprice]')).toHaveLength(1);
-    expect(document.querySelector('[data-timeprice]')!.textContent).toBe('30 h');
+    expect(visibleText(document.querySelector('[data-timeprice]')!)).toBe('30 h');
     expect(document.querySelector('.price-box__compare-price')!.textContent).toBe('35 000 Kč');
   });
 });
@@ -375,14 +377,14 @@ describe('adapter + observer — live conversion', () => {
     host.innerHTML = '<div data-testid="pd-price">30 000 Kč</div>';
     await settle();
     flushFrames();
-    expect(host.textContent).toBe('30 h');
+    expect(visibleText(host)).toBe('30 h');
 
     // Framework throws away our converted subtree and re-renders the raw price.
     host.innerHTML = '<div data-testid="pd-price">30 000 Kč</div>';
     await settle();
     flushFrames();
 
-    expect(host.textContent).toBe('30 h'); // re-applied, not duplicated
+    expect(visibleText(host)).toBe('30 h'); // re-applied, not duplicated
     expect(tpSpans()).toHaveLength(1);
     expect(frames).toHaveLength(0); // re-application is not a loop
   });

@@ -27,6 +27,12 @@ export interface AppSettings {
   workweekDays: number;
   /** Time rounding strategy (default 'auto'). */
   rounding: Rounding;
+  /**
+   * Invert the hover-swap direction (task 20). `false` (default): pages show the time, hovering
+   * reveals the original price. `true`: pages show the original price, hovering reveals the time.
+   * Display-only — it never changes what gets converted, just which face is shown at rest.
+   */
+  invertHover: boolean;
   /** Per-domain overrides of the global switch. Key = registrable domain. */
   siteOverrides: Record<string, SiteState>;
   /** User-added blocked domains, on top of the built-in blocklist (task 09). */
@@ -40,6 +46,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   workdayHours: 8,
   workweekDays: 5,
   rounding: 'auto',
+  invertHover: false,
   siteOverrides: {},
   blocklist: [],
 };

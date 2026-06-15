@@ -87,6 +87,7 @@ function mergeSettings(stored: Record<string, unknown>): AppSettings {
   if (typeof stored.workdayHours === 'number') merged.workdayHours = stored.workdayHours;
   if (typeof stored.workweekDays === 'number') merged.workweekDays = stored.workweekDays;
   if (isRounding(stored.rounding)) merged.rounding = stored.rounding;
+  if (typeof stored.invertHover === 'boolean') merged.invertHover = stored.invertHover;
 
   const siteOverrides = sanitizeSiteOverrides(stored.siteOverrides);
   if (siteOverrides) merged.siteOverrides = siteOverrides;

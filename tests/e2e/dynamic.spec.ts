@@ -14,13 +14,13 @@ test('dynamic: a price injected ~150 ms after load is converted by the observer'
 }) => {
   await page.goto(fixtureUrl('shop.example', '/edge/dynamic.html'));
   // The fixture's inline script appends `.lazy-price` after a timeout; the observer must convert it.
-  await expect(page.locator('.lazy-price')).toHaveText('5 h'); // 5 000 Kč
+  await expect(page.locator('.lazy-price')).toHaveText('5 h', { useInnerText: true }); // 5 000 Kč
 });
 
 test('SPA: a pushState navigation re-converts the swapped-in view', async ({ page }) => {
   await page.goto(fixtureUrl('shop.example', '/edge/spa.html'));
-  await expect(page.locator('.price')).toHaveText('10 h'); // 10 000 Kč (first pass)
+  await expect(page.locator('.price')).toHaveText('10 h', { useInnerText: true }); // 10 000 Kč (first pass)
 
   await page.locator('#nav').click(); // history.pushState + view swap
-  await expect(page.locator('.price')).toHaveText('20 h'); // 20 000 Kč (observer re-pass)
+  await expect(page.locator('.price')).toHaveText('20 h', { useInnerText: true }); // 20 000 Kč (observer re-pass)
 });

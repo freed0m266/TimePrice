@@ -52,6 +52,10 @@ Diskutovaná architektura a design rozhodnutí jsou zafixované v jednotlivých 
 13. [13 — Ikony + Chrome Web Store listing assets](13-icons-and-store-listing.md)
 14. [14 — E2E testy na fixturách + QA matice + release checklist](14-e2e-and-release.md)
 
+## v1.1 — UX enhancementy (post-MVP)
+
+20. [20 — Hover-swap: na najetí ukázat původní cenu místo času](20-hover-price-reveal.md)
+
 ## Future — design dokumenty (NEIMPLEMENTOVAT v MVP)
 
 > Tyto tasky existují jako technický návrh, aby architektura MVP nešla proti budoucnosti. Žádný z nich se ve v1.0 nestaví — slouží jako zafixovaný plán a kontrola, že abstrakce (Converter, adapter registry, settings schema) jsou připravené.

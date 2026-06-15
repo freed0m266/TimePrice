@@ -4,6 +4,8 @@ import { startObserving } from '@/content/observer';
 import { createScheduler, type Scheduler } from '@/content/perf/scheduler';
 import type { ConversionContext } from '@core/convert';
 
+import { visibleText } from '../visible-text';
+
 // 1000 Kč/h, 8h day, 5d week, auto rounding → 30 000 Kč = 30 h.
 const CTX: ConversionContext = {
   netHourlyRateCzk: 1000,
@@ -88,7 +90,7 @@ describe('observer — dynamic content', () => {
 
     flushFrames();
     expect(tpSpans()).toHaveLength(1);
-    expect(document.body.textContent).toBe('30 h');
+    expect(visibleText(document.body)).toBe('30 h');
   });
 
   it('batches many added nodes and scans only their topmost subtrees', async () => {
@@ -103,7 +105,7 @@ describe('observer — dynamic content', () => {
 
     flushFrames();
     expect(tpSpans()).toHaveLength(2);
-    expect(document.body.textContent).toBe('30 h24 h');
+    expect(visibleText(document.body)).toBe('30 h24 h');
   });
 
   it('converts text changed in place (characterData)', async () => {
@@ -115,7 +117,7 @@ describe('observer — dynamic content', () => {
 
     await settle();
     flushFrames();
-    expect(document.body.textContent).toBe('30 h');
+    expect(visibleText(document.body)).toBe('30 h');
     expect(tpSpans()).toHaveLength(1);
   });
 });
@@ -135,7 +137,7 @@ describe('observer — no infinite loop', () => {
     await settle();
     flushFrames();
     expect(tpSpans()).toHaveLength(1);
-    expect(document.body.textContent).toBe('30 h');
+    expect(visibleText(document.body)).toBe('30 h');
     expect(frames).toHaveLength(0);
   });
 });
@@ -149,14 +151,14 @@ describe('observer — survives framework re-renders', () => {
     host.innerHTML = '<span>30 000 Kč</span>';
     await settle();
     flushFrames();
-    expect(host.textContent).toBe('30 h');
+    expect(visibleText(host)).toBe('30 h');
 
     // React-style: the framework throws away our converted subtree and re-renders the price.
     host.innerHTML = '<span>30 000 Kč</span>';
     await settle();
     flushFrames();
 
-    expect(host.textContent).toBe('30 h'); // re-applied, not left raw and not duplicated
+    expect(visibleText(host)).toBe('30 h'); // re-applied, not left raw and not duplicated
     expect(tpSpans()).toHaveLength(1);
     expect(frames).toHaveLength(0); // re-application is not a loop
   });
@@ -176,7 +178,7 @@ describe('observer — SPA navigation', () => {
     history.pushState({}, '', '/products');
     flushFrames();
 
-    expect(document.body.textContent).toBe('30 h');
+    expect(visibleText(document.body)).toBe('30 h');
     expect(tpSpans()).toHaveLength(1);
   });
 

@@ -35,7 +35,7 @@ export type TimeUnit = 's' | 'min' | 'h' | 'day';
 export interface ConversionResult {
   /** Ready-to-insert human string — the top two time units, e.g. `"1 h, 59 min"`, `"62 d, 4 h"`, `"46 s"`. */
   display: string;
-  /** Machine value in hours, unrounded — for the tooltip and future sorting. */
+  /** Machine value in hours, unrounded — stored on the span (`data-tp-hours`) for future sorting. */
   hours: number;
   /** The largest (primary) unit shown in `display`. */
   unit: TimeUnit;

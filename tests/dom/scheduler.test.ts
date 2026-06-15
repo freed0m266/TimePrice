@@ -5,6 +5,8 @@ import { PERF } from '@/content/perf/constants';
 import { scan } from '@/content/scanner';
 import type { ConversionContext } from '@core/convert';
 
+import { visibleText } from '../visible-text';
+
 // 1000 Kč/h, 8h day, 5d week, auto rounding → 30 000 Kč = 30 h, 24 000 Kč = 24 h.
 const CTX: ConversionContext = {
   netHourlyRateCzk: 1000,
@@ -192,7 +194,7 @@ describe('scheduler — viewport-first gating (§1)', () => {
     onlyIO().intersect();
     drainAll();
 
-    expect(document.body.textContent).toBe('15 h');
+    expect(visibleText(document.body)).toBe('15 h');
   });
 
   it('does not defer the same text node twice across repeat scans (dedup)', () => {
@@ -224,7 +226,7 @@ describe('scheduler — viewport-first gating (§1)', () => {
 
     onlyIO().intersect();
     drainAll();
-    expect(document.body.textContent).toBe('24 h'); // updated 24 000 Kč, not stale 30 h or raw
+    expect(visibleText(document.body)).toBe('24 h'); // updated 24 000 Kč, not stale 30 h or raw
   });
 });
 
@@ -328,7 +330,7 @@ describe('scheduler — reset (SPA navigation)', () => {
     expect(newIO).not.toBe(oldIO);
     newIO.intersect();
     drainAll();
-    expect(document.body.textContent).toBe('24 h');
+    expect(visibleText(document.body)).toBe('24 h');
   });
 
   it('resets the per-page cap so a new route converts after the previous one capped out', () => {
@@ -347,7 +349,7 @@ describe('scheduler — reset (SPA navigation)', () => {
     scheduler.submit(scan());
     FakeIO.instances[FakeIO.instances.length - 1]!.intersect();
     drainAll();
-    expect(document.body.textContent).toBe('30 h'); // not blocked by route 1's cap
+    expect(visibleText(document.body)).toBe('30 h'); // not blocked by route 1's cap
   });
 });
 
@@ -390,7 +392,7 @@ describe('scheduler — eager fallback (no IntersectionObserver)', () => {
 
     // No IO → no deferral: converted immediately, no frame/idle slot needed.
     expect(tpSpans()).toHaveLength(1);
-    expect(document.body.textContent).toBe('30 h');
+    expect(visibleText(document.body)).toBe('30 h');
     expect(FakeIO.instances).toHaveLength(0);
   });
 });

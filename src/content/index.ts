@@ -21,7 +21,7 @@ import type { ConversionContext } from '@core/convert';
 
 import { adapterScan } from './adapters/engine';
 import { getAdapter } from './adapters/registry';
-import { reformatAll, revertAll } from './mutator';
+import { reformatAll, revertAll, setHoverMode } from './mutator';
 import { startObserving } from './observer';
 import { profiler } from './perf/profiler';
 import { createScheduler, type Scheduler } from './perf/scheduler';
@@ -34,6 +34,10 @@ import { createScheduler, type Scheduler } from './perf/scheduler';
 export async function run(): Promise<() => void> {
   const initial = await loadSettings();
   let ctx = contextFor(initial);
+  // The hover-swap direction is a CSS-only display preference (task 20): reflect it on the root
+  // up front, independent of the active gate, so a converted span shows the right face the moment
+  // it appears. Flipping it later mutates no span — see `setHoverMode`.
+  setHoverMode(initial.invertHover);
   let active = false;
   let stopObserver: (() => void) | null = null;
   let scheduler: Scheduler | null = null;
@@ -66,6 +70,10 @@ export async function run(): Promise<() => void> {
   if (isActive(initial)) activate();
 
   const unsubscribe = onSettingsChanged((next) => {
+    // Display-only: keep the swap direction in sync regardless of the active state, with no
+    // re-scan or reformat — the stylesheet does the rest.
+    setHoverMode(next.invertHover);
+
     const nextActive = isActive(next);
 
     if (nextActive && !active) {

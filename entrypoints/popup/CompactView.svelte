@@ -74,6 +74,20 @@
       {settings.current.enabled ? t.globalToggleHint : t.globalOffHint}
     </p>
 
+    <!-- Hover-swap direction: when on, pages show prices and reveal the time on hover (task 20).
+         Display-only, so it stays usable even while a per-site/global toggle is off. -->
+    <div class="invert">
+      <Toggle
+        id="tp-invert"
+        label={t.invertToggle}
+        checked={settings.current.invertHover}
+        onchange={(value) => settings.patch({ invertHover: value })}
+      />
+      <p class="hint">
+        {settings.current.invertHover ? t.invertOnHint : t.invertOffHint}
+      </p>
+    </div>
+
     <!-- Per-site toggle: turn TimePrice off/on for just the active tab's domain. Disabled
          (and forced off) when global is off or the domain is on the built-in blocklist. -->
     {#if hostResolved}
@@ -139,6 +153,15 @@
     margin: 0;
     font-size: 0.82rem;
     color: var(--tp-fg-muted);
+  }
+
+  .invert {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--tp-border);
   }
 
   .per-site {

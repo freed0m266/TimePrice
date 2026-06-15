@@ -31,6 +31,7 @@ export interface SeedSettings {
   workdayHours?: number;
   workweekDays?: number;
   rounding?: 'auto' | 'tenths' | 'whole';
+  invertHover?: boolean;
   siteOverrides?: Record<string, 'on' | 'off'>;
   blocklist?: string[];
 }

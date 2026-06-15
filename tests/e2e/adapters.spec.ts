@@ -63,7 +63,9 @@ for (const c of CASES) {
     page,
   }) => {
     await page.goto(fixtureUrl(c.host, c.fixture));
-    await expect(page.locator(c.detailSelector)).toContainText(c.detailText);
+    await expect(page.locator(c.detailSelector)).toContainText(c.detailText, {
+      useInnerText: true,
+    });
     await expect(page.locator(c.ignoredSelector)).toHaveText(c.ignoredText);
   });
 }

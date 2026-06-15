@@ -18,6 +18,8 @@ import { DEFAULT_SETTINGS } from '@/settings/schema';
 
 import { CTX, convertedValues, fixtureBody, loadFixture } from './_fixtures';
 
+import { visibleText } from '../visible-text';
+
 afterEach(() => {
   document.body.innerHTML = '';
   document.getElementById('tp-style')?.remove();
@@ -35,7 +37,7 @@ describe('generic engine — realistic pages', () => {
   it('product detail: converts anchored prices, leaves bare numbers/specs alone', () => {
     convertGeneric('generic/generic-shop.html');
     expect(convertedValues()).toEqual([199, 1500, 2000]); // 2 000 Kč, 199 CZK, 1 500,-
-    const text = document.body.textContent ?? '';
+    const text = visibleText(document.body);
     for (const bare of ['60 W', '2024', '2026', '12345']) expect(text).toContain(bare);
   });
 
@@ -47,7 +49,7 @@ describe('generic engine — realistic pages', () => {
   it('prose: converts a price mid-sentence, leaves the year and temperature', () => {
     convertGeneric('generic/generic-blog.html');
     expect(convertedValues()).toEqual([4500]);
-    const text = document.body.textContent ?? '';
+    const text = visibleText(document.body);
     expect(text).toContain('2026');
     expect(text).toContain('25 °C');
   });
@@ -61,9 +63,9 @@ describe('edge cases', () => {
     expect(convertedValues()).toEqual([1000, 2000]);
     const del = document.querySelector('del');
     expect(del).not.toBeNull();
-    expect(del!.textContent).toBe('2 h'); // 2 000 Kč converted, still inside <del>
+    expect(visibleText(del!)).toBe('2 h'); // 2 000 Kč converted, still inside <del>
     expect(del!.querySelector('[data-timeprice]')).not.toBeNull();
-    expect(document.querySelector('.sale')!.textContent).toBe('1 h');
+    expect(visibleText(document.querySelector('.sale')!)).toBe('1 h');
   });
 
   it('split price: leaves a number/anchor split across elements untouched (no artifact)', () => {
@@ -76,7 +78,7 @@ describe('edge cases', () => {
   it('unit price: converts the amount and preserves the per-unit suffix (offset invariant)', () => {
     convertGeneric('edge/unit-price.html');
     expect(convertedValues()).toEqual([199, 299]);
-    const text = document.body.textContent ?? '';
+    const text = visibleText(document.body);
     expect(text).toContain('11 min, 56 s/kg'); // 199 Kč → 716 s, "/kg" kept
     expect(text).toContain('17 min, 56 s / měsíc'); // 299 Kč → 1076 s, "/ měsíc" kept
     expect(text).not.toContain('199 Kč');
@@ -186,13 +188,13 @@ describe('live observer — dynamic content on fixtures', () => {
     await settle();
     flushFrames();
     expect(convertedValues()).toEqual([5000]);
-    expect(document.querySelector('.lazy-price')!.textContent).toBe('5 h');
+    expect(visibleText(document.querySelector('.lazy-price')!)).toBe('5 h');
   });
 
   it('SPA: re-passes the new view after a pushState navigation', async () => {
     loadFixture('edge/spa.html');
     applyAll(adapterScan(null, document.body), CTX); // first pass
-    expect(document.querySelector('.price')!.textContent).toBe('10 h');
+    expect(visibleText(document.querySelector('.price')!)).toBe('10 h');
 
     stop = startObserving(scheduler, null);
 
@@ -202,7 +204,7 @@ describe('live observer — dynamic content on fixtures', () => {
 
     await settle();
     flushFrames();
-    expect(document.querySelector('.price')!.textContent).toBe('20 h');
+    expect(visibleText(document.querySelector('.price')!)).toBe('20 h');
     expect(document.querySelectorAll('[data-timeprice]')).toHaveLength(1);
   });
 });

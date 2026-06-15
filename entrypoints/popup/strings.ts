@@ -28,6 +28,10 @@ export const STRINGS = {
     globalToggle: 'TimePrice zapnutý',
     globalToggleHint: 'Na webech uvidíš čas místo cen.',
     globalOffHint: 'Vypnuto — ceny se nepřevádějí nikde.',
+    // Hover-swap direction toggle (task 20). On = show prices, reveal time on hover.
+    invertToggle: 'Zobrazovat ceny (čas na hover)',
+    invertOnHint: 'Web ukáže ceny v Kč; čas se objeví po najetí myší.',
+    invertOffHint: 'Web ukáže čas; původní cena se objeví po najetí myší.',
     // Per-site toggle. The label gets the domain appended, e.g. "TimePrice na alza.cz".
     perSitePrefix: 'TimePrice na',
     perSiteOnHint: 'Na téhle doméně se ceny převádějí na čas.',

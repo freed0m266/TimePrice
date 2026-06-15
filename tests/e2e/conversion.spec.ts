@@ -13,9 +13,11 @@ test('alza adapter binds by host: detail + cards convert, comparison/out-of-cont
 }) => {
   await page.goto(fixtureUrl('alza.cz', '/sites/alza.html'));
 
-  await expect(page.locator('.price-box__price')).toContainText('30 h'); // detail main
-  await expect(page.locator('.c2-price-final')).toContainText('7 h'); // listing card
-  await expect(page.locator('[data-testid="pricePrimary"]')).toHaveText('1 h, 59 min'); // 1 990 Kč
+  await expect(page.locator('.price-box__price')).toContainText('30 h', { useInnerText: true }); // detail main
+  await expect(page.locator('.c2-price-final')).toContainText('7 h', { useInnerText: true }); // listing card
+  await expect(page.locator('[data-testid="pricePrimary"]')).toHaveText('1 h, 59 min', {
+    useInnerText: true,
+  }); // 1 990 Kč
 
   // Ignored + out-of-container prices stay raw.
   await expect(page.locator('.price-box__compare-price')).toHaveText('35 000 Kč');
@@ -28,7 +30,7 @@ test('generic engine converts anchored prices on a non-adapter host, leaves bare
 }) => {
   await page.goto(fixtureUrl('shop.example', '/generic/generic-shop.html'));
 
-  await expect(page.locator('.price-main')).toHaveText('2 h'); // 2 000 Kč
+  await expect(page.locator('.price-main')).toHaveText('2 h', { useInnerText: true }); // 2 000 Kč
   await expect(page.locator('.specs')).toContainText('60 W'); // spec, no anchor → untouched
   await expect(page.locator('.specs')).toContainText('2026'); // model year → untouched
 });
@@ -36,6 +38,6 @@ test('generic engine converts anchored prices on a non-adapter host, leaves bare
 test('discount: both prices convert and the strikethrough element survives', async ({ page }) => {
   await page.goto(fixtureUrl('shop.example', '/edge/discount.html'));
 
-  await expect(page.locator('del.original')).toHaveText('2 h'); // 2 000 Kč, still in <del>
-  await expect(page.locator('.sale')).toHaveText('1 h'); // 1 000 Kč
+  await expect(page.locator('del.original')).toHaveText('2 h', { useInnerText: true }); // 2 000 Kč, still in <del>
+  await expect(page.locator('.sale')).toHaveText('1 h', { useInnerText: true }); // 1 000 Kč
 });
