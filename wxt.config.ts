@@ -15,7 +15,7 @@ export default defineConfig({
   manifest: {
     name: 'TimePrice',
     description: 'Převádí ceny v e-shopech na čas, který musíš odpracovat, abys na ně vydělal.',
-    version: '1.0.0',
+    version: '1.0.1',
     // Minimal permissions (audited in task 12). `storage` for settings; `activeTab` lets the
     // popup read the active tab's URL (for the per-site toggle, task 09) only after the user
     // opens it — no broad `tabs`/`scripting`/`webNavigation`/`cookies`, and no

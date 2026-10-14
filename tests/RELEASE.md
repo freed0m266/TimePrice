@@ -30,7 +30,7 @@ zelené automaty, pak ruční QA, pak balení a store. Cokoli blokujícího = st
 - [ ] **Žádný síťový request z extension** — ověřeno v DevTools → Network na reálné stránce
       (content i background). ESLint no-network ban je zelený jako druhá pojistka.
 - [ ] Privacy policy hostovaná na veřejné URL + odkaz v popupu funguje (vede na hostovanou verzi).
-- [ ] Manifest `version` = `1.0.0` (sedí s `package.json`).
+- [ ] Manifest `version` = verze v `package.json` (a `wxt.config.ts`), vyšší než ta ve storu.
 
 ## 4. Store assety (task 13)
 

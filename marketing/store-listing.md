@@ -12,7 +12,7 @@ live in [`store/`](store/).
 | Field | Value |
 | --- | --- |
 | **Name** | TimePrice |
-| **Version** | 1.0.0 |
+| **Version** | 1.0.1 |
 | **Category** | Shopping |
 | **Primary language** | Čeština (CZK-only product) |
 | **Secondary language** | English (optional) |
@@ -211,7 +211,7 @@ to the privacy posture.
       (content script or background) after a full page interaction.
 - [ ] Popup "Soukromí" link opens the privacy policy.
 - [ ] `pnpm lint` passes, including the no-network rule and its negative test.
-- [ ] Built manifest has `version` `1.0.0`, `icons` 16/32/48/128, and `action.default_icon`.
+- [ ] Built manifest has `version` `1.0.1`, `icons` 16/32/48/128, and `action.default_icon`.
 - [ ] Toolbar icon is legible on light and dark toolbars (not the WXT placeholder).
 - [ ] `pnpm zip` produces an uploadable package under `.output/`.
 - [ ] Short description ≤ 132 chars; listing claims match the MVP (CZK-only, top CZ shops +
