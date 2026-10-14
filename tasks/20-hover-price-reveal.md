@@ -1,6 +1,6 @@
 # 20 — Hover-swap: na najetí ukázat původní cenu místo času
 
-**Status:** Done — 2026-06-15
+**Status:** Done — 2026-06-15 (vydáno v 1.0.0) · hover-swap nahrazen nativním tooltipem v [tasku 21](21-native-tooltip.md); přepínač `invertHover` zůstává
 
 **Priorita:** v1.1 (post-MVP UX) · **Úsilí:** S · **Dopad:** UX (discoverability původní ceny)
 

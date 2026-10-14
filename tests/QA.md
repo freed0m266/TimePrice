@@ -20,8 +20,8 @@ ne, je čas fixturu obnovit (a nejspíš i adaptér v `src/content/adapters/site
 
 Scénáře: **Detail** (karta produktu) · **Výpis** (listing/kategorie) · **Sleva** (přeškrtnutá +
 aktuální cena) · **Košík** (qty/cena netknuté tam, kde nemá převádět) · **Hover** (najetí
-prohodí čas zpět na původní cenu v místě, odjetí vrátí čas; **žádný** OS-tooltip ani vizuální
-náznak — task 20) · **Síť** (0 requestů).
+ukáže šedý nativní tooltip s původní cenou — v price-first módu s časem; text na stránce se
+nemění, žádný vizuální náznak — task 21) · **Síť** (0 requestů).
 
 | Eshop | Detail | Výpis | Sleva | Košík | Hover | Síť | Pozn. |
 | --- | --- | --- | --- | --- | --- | --- | --- |

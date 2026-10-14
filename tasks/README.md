@@ -54,7 +54,8 @@ Diskutovaná architektura a design rozhodnutí jsou zafixované v jednotlivých 
 
 ## v1.1 — UX enhancementy (post-MVP)
 
-20. [20 — Hover-swap: na najetí ukázat původní cenu místo času](20-hover-price-reveal.md)
+20. [20 — Hover-swap: na najetí ukázat původní cenu místo času](20-hover-price-reveal.md) — hover-swap nahrazen taskem 21
+21. [21 — Návrat nativního tooltipu místo hover-swapu](21-native-tooltip.md)
 
 ## Future — design dokumenty (NEIMPLEMENTOVAT v MVP)
 
