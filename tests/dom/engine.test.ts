@@ -111,7 +111,7 @@ describe('content engine — activation lifecycle', () => {
     expect(span.getAttribute('data-tp-original')).toBe('30 000 Kč');
   });
 
-  it('flips the hover-swap direction live without reverting the converted spans', async () => {
+  it('switches to price-first mode live without reverting the converted spans', async () => {
     await saveSettings({ netHourlyRateCzk: 1000 });
     document.body.innerHTML = '<span>30 000 Kč</span>';
 
@@ -123,7 +123,7 @@ describe('content engine — activation lifecycle', () => {
     await saveSettings({ invertHover: true });
     await settle();
     // CSS-only flip: the root marker is set and the span (with its stored data) is untouched —
-    // no revert, no reformat. The actual visual swap is covered by the Playwright E2E.
+    // no revert, no reformat. Which face actually shows is covered by the Playwright E2E.
     expect(document.documentElement.hasAttribute('data-tp-invert')).toBe(true);
     expect(document.querySelectorAll('[data-timeprice]')).toHaveLength(1);
     expect(span.getAttribute('data-tp-original')).toBe('30 000 Kč');

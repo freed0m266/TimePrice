@@ -3,16 +3,17 @@
 // Takes the read-only candidates from the scanner (task 06) and rewrites each price into
 // its work-time equivalent (`formatTime`, task 05) DIRECTLY in the page text. Every
 // replacement is wrapped in a `<span class="tp-converted" data-timeprice>` that:
-//   - holds two inline children — `.tp-time` (the converted time, shown) and `.tp-orig`
-//     (the original price, hidden until hover; task 20 hover-swap),
+//   - holds two inline children — `.tp-time` (the converted time) and `.tp-orig` (the
+//     original price) — of which CSS shows exactly one (time-first by default, price-first
+//     when the user opts in; task 20/21),
 //   - carries everything needed to undo and re-format it (`data-tp-original`,
 //     `data-tp-value`, `data-tp-hours`),
 //   - inherits the page's color/font/strikethrough so the page looks unchanged.
 //
-// Hover affordance (task 20): hovering the converted time swaps it in place for the original
-// price, with NO JS listeners and NO DOM mutation — pure CSS `:hover` toggles `visibility` on
-// two grid-stacked children (see STYLE_TEXT). Because hover never mutates the DOM, the observer
-// (task 08) has nothing to react to and the self-write guard is irrelevant to it.
+// Hover affordance (task 21): the browser's native tooltip. Each child carries the OTHER face in
+// its `title`, so whichever child is shown, hovering it pops the value that isn't on the page.
+// The page text never changes on hover — no JS listeners, no DOM mutation, nothing for the
+// observer (task 08) to react to. (Task 20's in-place hover-swap is retired.)
 //
 // The three guarantees this module exists to provide:
 //   - Idempotent: re-running never double-processes. The scanner skips `data-timeprice`
@@ -38,10 +39,10 @@ import type { PriceCandidate } from './scanner';
 /** Id of the single injected stylesheet that keeps our spans visually invisible. */
 const STYLE_ID = 'tp-style';
 
-/** Class on the inline child holding the converted time (the resting, shown state). */
+/** Class on the inline child holding the converted time (shown in time-first mode). */
 const TIME_CLASS = 'tp-time';
 
-/** Class on the inline child holding the original price (hidden until the parent is hovered). */
+/** Class on the inline child holding the original price (shown in price-first mode). */
 const ORIG_CLASS = 'tp-orig';
 
 /**
@@ -53,43 +54,32 @@ const ORIG_CLASS = 'tp-orig';
 const SPAN_CLASS = 'tp-converted';
 
 // Targeted inheritance so the page keeps its exact look: same color and font, and a
-// parent's strikethrough (discounts: `<del>`/`line-through`) still paints across our span.
-// The two children carry the same inheritance, so the strikethrough is drawn on their own
-// text (not relied on from the ancestor) — which keeps it working even though the grid below
-// makes the span an atomic inline box. Deliberately NOT `all: unset` (that would drop font
-// inheritance). The rules key off the `data-timeprice` attribute (not a bare class) on
-// purpose: an attribute-scoped selector outranks a host site's bare `span { … }` rules and
-// cannot be shadowed by them, so a host `span` rule can't recolor the hidden price.
+// parent's strikethrough (discounts: `<del>`/`line-through`) still paints across our span and
+// its children. Deliberately NOT `all: unset` (that would drop font inheritance) and NO layout
+// properties on the span itself, so the page's feel is untouched. The rules key off the
+// `data-timeprice` attribute (not a bare class) on purpose: an attribute-scoped selector
+// outranks a host site's bare `span { … }` rules and cannot be shadowed by them.
 //
-// Hover-swap (task 20): the span is an inline GRID whose two children share the single cell
-// (`grid-area:1/1`), so the box is always as wide as the WIDER of {time, price}. Swapping
-// toggles `visibility` (which preserves layout) — NOT `display` — so the box never resizes on
-// hover. That kills the "layout jump" flicker: with a `display` swap, hovering a wide time
-// shrinks the box to the narrower price, the pointer falls outside it, `:hover` drops, the box
-// grows back under the pointer, and the two states oscillate. A constant-width box can't.
-// `visibility:hidden` also removes the resting-hidden face from the accessibility tree, so a
-// screen reader reads exactly the shown value (no `aria-hidden` needed, and it stays correct
-// when the direction is inverted). Pure CSS — no JS, no DOM mutation, so the observer never
-// sees a thing. The `:hover` rules outrank the resting `visibility`, so they win without
-// depending on source order.
+// Face selection (task 21): exactly one child is displayed, the other is `display:none` — so the
+// span is as wide as the shown value only (price-first keeps the page's original layout), the
+// pointer can only land on the shown child (its `title` is the one the browser pops), and the
+// hidden face is out of the accessibility tree (a screen reader reads the shown value, with the
+// other one as the `title` description). The shown child gets an explicit `display:inline` so a
+// host `… span { display:block }` rule can't break the price onto its own line.
 //
-// Inverted direction (task 20, `invertHover`): when the root carries `data-tp-invert`, the page
-// shows the original PRICE at rest and reveals the TIME on hover — the mirror of the default.
-// It's a single root-attribute flip (set by the engine on a settings change), so switching
-// direction mutates nothing in the price spans: no re-scan, no reformat, no observer churn. The
-// inverted rules carry one extra attribute of specificity, so they override the default ones.
+// Price-first mode (`invertHover`): when the root carries `data-tp-invert`, the page shows the
+// original PRICE and the tooltip the TIME — the mirror of the default. It's a single
+// root-attribute flip (set by the engine on a settings change), so switching modes mutates
+// nothing in the price spans: no re-scan, no reformat, no observer churn. The price-first rules
+// carry one extra attribute of specificity, so they override the time-first ones.
 const STYLE_TEXT =
-  '[data-timeprice]{display:inline-grid;color:inherit;font:inherit;text-decoration:inherit;}' +
-  '[data-timeprice]>.tp-time,[data-timeprice]>.tp-orig{grid-area:1/1;color:inherit;font:inherit;text-decoration:inherit;}' +
-  '[data-timeprice]>.tp-orig{visibility:hidden;}' +
-  '[data-timeprice]:hover>.tp-time{visibility:hidden;}' +
-  '[data-timeprice]:hover>.tp-orig{visibility:visible;}' +
-  '[data-tp-invert] [data-timeprice]>.tp-time{visibility:hidden;}' +
-  '[data-tp-invert] [data-timeprice]>.tp-orig{visibility:visible;}' +
-  '[data-tp-invert] [data-timeprice]:hover>.tp-time{visibility:visible;}' +
-  '[data-tp-invert] [data-timeprice]:hover>.tp-orig{visibility:hidden;}';
+  '[data-timeprice],[data-timeprice]>.tp-time,[data-timeprice]>.tp-orig{color:inherit;font:inherit;text-decoration:inherit;}' +
+  '[data-timeprice]>.tp-time{display:inline;}' +
+  '[data-timeprice]>.tp-orig{display:none;}' +
+  '[data-tp-invert] [data-timeprice]>.tp-time{display:none;}' +
+  '[data-tp-invert] [data-timeprice]>.tp-orig{display:inline;}';
 
-/** Root attribute that flips the hover-swap direction (see STYLE_TEXT). */
+/** Root attribute that switches the page to price-first mode (see STYLE_TEXT). */
 const INVERT_ATTR = 'data-tp-invert';
 
 /**
@@ -172,11 +162,12 @@ function applyMatch(node: Text, match: PriceMatch, ctx: ConversionContext, doc: 
 
 /**
  * Build (or rebuild) a converted span's two inline children: `.tp-time` with the time, `.tp-orig`
- * with the original price. The hover-swap (task 20) toggles their visibility purely in CSS, so
- * both faces must live as real text on the page. The resting-hidden one is `visibility:hidden`,
- * which keeps it out of the accessibility tree — so a screen reader (which has no hover) reads the
- * single shown value, never "30 h 30 000 Kč", in either swap direction. No `aria-hidden` here:
- * it is static, so it would read the wrong (or no) face once the direction is inverted.
+ * with the original price. CSS shows exactly one of them (time-first / price-first), so both
+ * faces live as real text on the page and a mode switch needs no DOM write. Each child's `title`
+ * is the OTHER face, so the native tooltip on the shown child always reveals the hidden value
+ * (task 21). The hidden child is `display:none`, which keeps it out of the accessibility tree —
+ * a screen reader never reads "30 h 30 000 Kč". No `aria-hidden` here: it is static, so it would
+ * read the wrong (or no) face once the mode is switched.
  *
  * `replaceChildren` makes this idempotent: a re-render that calls it again can never leave two
  * `.tp-time` nodes behind.
@@ -190,19 +181,21 @@ function renderSpanChildren(
   const time = doc.createElement('span');
   time.className = TIME_CLASS;
   time.textContent = display;
+  time.title = original;
 
   const orig = doc.createElement('span');
   orig.className = ORIG_CLASS;
   orig.textContent = original;
+  orig.title = display;
 
   span.replaceChildren(time, orig);
 }
 
 /**
- * Flip the hover-swap direction for the whole document (task 20, `invertHover`). Sets/clears the
- * `data-tp-invert` marker the stylesheet keys off, so the change is instant and touches no price
- * span — no re-scan, no reformat, no observer churn. Idempotent; safe to call before any price is
- * converted (the attribute simply waits for the spans).
+ * Switch the whole document between time-first and price-first mode (`invertHover`; task 20/21).
+ * Sets/clears the `data-tp-invert` marker the stylesheet keys off, so the change is instant and
+ * touches no price span — no re-scan, no reformat, no observer churn. Idempotent; safe to call
+ * before any price is converted (the attribute simply waits for the spans).
  */
 export function setHoverMode(invert: boolean, doc?: Document): void {
   const target = doc ?? (typeof document !== 'undefined' ? document : null);
@@ -233,14 +226,16 @@ function reformatSpan(span: HTMLElement, ctx: ConversionContext): void {
   const result = formatTime(value, ctx);
   if (result.display === '') return; // invalid ctx — keep the current display
 
-  // Write the new time into the `.tp-time` child only — touching `span.textContent` would
-  // wipe the `.tp-orig` hover-swap child. If the child is missing (a legacy span, or a foreign
-  // re-render that mangled our structure) rebuild both children from `data-tp-original` rather
-  // than crash or leave a half-state. A swap that's mid-hover is unaffected: CSS owns the
-  // pseudo-state, so the freshly written time shows correctly once the pointer leaves.
+  // Write the new time into the `.tp-time` child and the `.tp-orig` tooltip only — touching
+  // `span.textContent` would wipe the `.tp-orig` child. If either child is missing (a legacy
+  // span, or a foreign re-render that mangled our structure) rebuild both from
+  // `data-tp-original` rather than crash or leave a half-state. The `title` write is an
+  // attribute mutation, which the observer doesn't watch — no re-scan.
   const time = span.querySelector<HTMLElement>(':scope > .' + TIME_CLASS);
-  if (time) {
+  const orig = span.querySelector<HTMLElement>(':scope > .' + ORIG_CLASS);
+  if (time && orig) {
     time.textContent = result.display;
+    orig.title = result.display;
   } else {
     const doc = span.ownerDocument;
     renderSpanChildren(span, result.display, span.getAttribute('data-tp-original') ?? '', doc);

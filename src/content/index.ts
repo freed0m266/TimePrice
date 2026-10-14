@@ -34,9 +34,9 @@ import { createScheduler, type Scheduler } from './perf/scheduler';
 export async function run(): Promise<() => void> {
   const initial = await loadSettings();
   let ctx = contextFor(initial);
-  // The hover-swap direction is a CSS-only display preference (task 20): reflect it on the root
-  // up front, independent of the active gate, so a converted span shows the right face the moment
-  // it appears. Flipping it later mutates no span — see `setHoverMode`.
+  // Time-first vs price-first is a CSS-only display preference (task 20/21): reflect it on the
+  // root up front, independent of the active gate, so a converted span shows the right face the
+  // moment it appears. Flipping it later mutates no span — see `setHoverMode`.
   setHoverMode(initial.invertHover);
   let active = false;
   let stopObserver: (() => void) | null = null;
@@ -70,7 +70,7 @@ export async function run(): Promise<() => void> {
   if (isActive(initial)) activate();
 
   const unsubscribe = onSettingsChanged((next) => {
-    // Display-only: keep the swap direction in sync regardless of the active state, with no
+    // Display-only: keep the shown face in sync regardless of the active state, with no
     // re-scan or reformat — the stylesheet does the rest.
     setHoverMode(next.invertHover);
 

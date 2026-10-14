@@ -74,7 +74,7 @@
       {settings.current.enabled ? t.globalToggleHint : t.globalOffHint}
     </p>
 
-    <!-- Hover-swap direction: when on, pages show prices and reveal the time on hover (task 20).
+    <!-- Price-first mode: when on, pages show prices and the hover tooltip shows the time (task 20/21).
          Display-only, so it stays usable even while a per-site/global toggle is off. -->
     <div class="invert">
       <Toggle

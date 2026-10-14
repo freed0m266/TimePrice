@@ -13,10 +13,10 @@ import type { ConversionContext } from '@core/convert';
 
 import { visibleText } from '../visible-text';
 
-/** The `.tp-time` (shown) child of a converted span. */
-const timeOf = (span: Element) => span.querySelector('.tp-time');
-/** The `.tp-orig` (hover-swap) child of a converted span. */
-const origOf = (span: Element) => span.querySelector('.tp-orig');
+/** The `.tp-time` (shown in time-first mode) child of a converted span. */
+const timeOf = (span: Element) => span.querySelector<HTMLElement>('.tp-time');
+/** The `.tp-orig` (shown in price-first mode) child of a converted span. */
+const origOf = (span: Element) => span.querySelector<HTMLElement>('.tp-orig');
 
 // 1000 Kč/h, 8h day, 5d week, auto rounding → 30 000 Kč = 30 h, 24 000 Kč = 24 h.
 const CTX: ConversionContext = {
@@ -59,7 +59,7 @@ describe('mutator — single replacement', () => {
     expect(visibleText(document.body)).toBe('30 h');
   });
 
-  it('builds the two hover-swap children, both faces carried as real text', () => {
+  it('builds the two face children, each carrying the other face as its tooltip', () => {
     render('<span>30 000 Kč</span>');
     activate();
 
@@ -71,13 +71,16 @@ describe('mutator — single replacement', () => {
     expect(time.textContent).toBe('30 h');
     expect(orig.textContent).toBe('30 000 Kč'); // === match.raw / data-tp-original
 
-    // No `aria-hidden`: the resting-hidden face is dropped from the a11y tree by `visibility`
-    // (CSS, not assertable in jsdom), which stays correct when the swap direction is inverted.
+    // Native tooltip (task 21): each child's `title` is the OTHER face, so hovering whichever
+    // one CSS shows reveals the hidden value. The wrapper itself carries no `title`.
+    expect(time.title).toBe('30 000 Kč');
+    expect(orig.title).toBe('30 h');
+    expect(tp.title).toBe('');
+
+    // No `aria-hidden`: the hidden face is dropped from the a11y tree by `display:none` (CSS,
+    // not assertable in jsdom), which stays correct when the mode is switched.
     expect(orig.hasAttribute('aria-hidden')).toBe(false);
     expect(time.hasAttribute('aria-hidden')).toBe(false);
-
-    // The OS-tooltip affordance is gone — the swap fully replaces it.
-    expect(tp.title).toBe('');
   });
 
   it('does not set layout-altering inline styles and injects the style sheet once', () => {
@@ -174,12 +177,28 @@ describe('mutator — re-formatting on rate change', () => {
     expect(timeOf(tp)?.textContent).toBe('30 h');
 
     reformatAll({ ...CTX, netHourlyRateCzk: 2000 }); // → 15 h
-    expect(timeOf(tp)?.textContent).toBe('15 h'); // only the time child is rewritten
-    expect(origOf(tp)?.textContent).toBe('30 000 Kč'); // hover-swap child untouched
+    expect(timeOf(tp)?.textContent).toBe('15 h'); // the time child is rewritten…
+    expect(origOf(tp)?.title).toBe('15 h'); // …and so is the price-first tooltip
+    expect(timeOf(tp)?.title).toBe('30 000 Kč'); // the time-first tooltip (price) is untouched
+    expect(origOf(tp)?.textContent).toBe('30 000 Kč'); // price child text untouched
     expect(tp.children).toHaveLength(2); // no duplicate children
     expect(tp.getAttribute('data-tp-hours')).toBe('15');
     expect(tp.getAttribute('data-tp-value')).toBe('30000'); // unchanged
     expect(tp.getAttribute('data-tp-original')).toBe('30 000 Kč'); // unchanged
+  });
+
+  it('rebuilds both children (with tooltips) when a foreign re-render mangled them', () => {
+    render('<span>30 000 Kč</span>');
+    activate();
+    const tp = document.querySelector('[data-timeprice]') as HTMLElement;
+    origOf(tp)!.remove(); // e.g. a framework stripped one of our children
+
+    reformatAll({ ...CTX, netHourlyRateCzk: 2000 }); // → 15 h
+    expect(tp.children).toHaveLength(2);
+    expect(timeOf(tp)?.textContent).toBe('15 h');
+    expect(timeOf(tp)?.title).toBe('30 000 Kč');
+    expect(origOf(tp)?.textContent).toBe('30 000 Kč');
+    expect(origOf(tp)?.title).toBe('15 h');
   });
 });
 
@@ -216,7 +235,7 @@ describe('mutator — multiple matches in one node', () => {
     expect(converted).toBe(2);
     expect(tpSpans()).toHaveLength(2);
     // Back-to-front: the two highest-offset prices convert; the first stays raw. Read the
-    // resting text — `.tp-orig` still holds the converted prices' raw strings for the swap.
+    // shown text — `.tp-orig` still holds the converted prices' raw strings (price-first).
     const shown = visibleText(document.body);
     expect(shown).toContain('199 Kč');
     expect(shown).not.toContain('299 Kč');
@@ -224,20 +243,20 @@ describe('mutator — multiple matches in one node', () => {
   });
 });
 
-describe('mutator — hover-swap direction (invertHover)', () => {
+describe('mutator — time-first / price-first mode (invertHover)', () => {
   it('toggles the root marker the stylesheet keys off, without touching the spans', () => {
     render('<span>30 000 Kč</span>');
     activate();
     const tp = document.querySelector('[data-timeprice]') as HTMLElement;
     const before = tp.outerHTML;
 
-    // Default: no marker. The actual visual swap is CSS-only (jsdom can't render `:hover`), so we
-    // assert the marker the rules depend on, plus that flipping it never mutates a price span.
+    // Default: no marker. Which face shows is CSS-only (jsdom has no layout), so we assert the
+    // marker the rules depend on, plus that flipping it never mutates a price span.
     expect(document.documentElement.hasAttribute('data-tp-invert')).toBe(false);
 
     setHoverMode(true);
     expect(document.documentElement.hasAttribute('data-tp-invert')).toBe(true);
-    expect(tp.outerHTML).toBe(before); // direction is a root flip — spans are untouched
+    expect(tp.outerHTML).toBe(before); // mode is a root flip — spans (and titles) untouched
 
     setHoverMode(false);
     expect(document.documentElement.hasAttribute('data-tp-invert')).toBe(false);

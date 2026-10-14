@@ -28,8 +28,9 @@ export interface AppSettings {
   /** Time rounding strategy (default 'auto'). */
   rounding: Rounding;
   /**
-   * Invert the hover-swap direction (task 20). `false` (default): pages show the time, hovering
-   * reveals the original price. `true`: pages show the original price, hovering reveals the time.
+   * Price-first mode (task 20/21; key name kept for stored-settings compat). `false` (default,
+   * time-first): pages show the time, the tooltip shows the original price. `true`: pages show the
+   * original price, the tooltip shows the time.
    * Display-only — it never changes what gets converted, just which face is shown at rest.
    */
   invertHover: boolean;

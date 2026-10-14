@@ -22,9 +22,8 @@ test('unit price: the amount converts and the per-unit suffix is preserved', asy
   await page.locator('[data-timeprice]').first().waitFor();
 
   // The amount converts; the per-unit suffix survives as the text node right after the converted
-  // span (the offset invariant). We assert that at the DOM level: the hover-swap box stacks its
-  // two children as block grid items, so `innerText` would weave a newline between "11 min, 56 s"
-  // and "/kg" — a serialization quirk only; visually the suffix stays inline (verified by smoke).
+  // span (the offset invariant). We assert that at the DOM level, then in the rendered text: the
+  // span is plain inline (task 21), so `innerText` reads exactly what the user sees.
   const converted = await page.evaluate(() =>
     [...document.querySelectorAll('[data-timeprice]')].map((el) => ({
       orig: el.getAttribute('data-tp-original'),
@@ -35,7 +34,14 @@ test('unit price: the amount converts and the per-unit suffix is preserved', asy
   expect(converted).toContainEqual({ orig: '199 Kč', time: '11 min, 56 s', suffix: '/kg' }); // 716 s
   expect(converted).toContainEqual({ orig: '299 Kč', time: '17 min, 56 s', suffix: ' / měsíc' }); // 1076 s
 
-  // The raw price is not shown at rest (the `.tp-orig` twin is visibility:hidden).
+  await expect(page.locator('.price').first()).toHaveText('11 min, 56 s/kg', {
+    useInnerText: true,
+  });
+  await expect(page.locator('.price').nth(1)).toHaveText('17 min, 56 s / měsíc', {
+    useInnerText: true,
+  });
+
+  // The raw price is not shown in time-first mode (the `.tp-orig` twin is display:none).
   await expect(page.locator('body')).not.toContainText('199 Kč', { useInnerText: true });
 });
 

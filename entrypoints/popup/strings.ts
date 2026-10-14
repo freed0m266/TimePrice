@@ -28,7 +28,7 @@ export const STRINGS = {
     globalToggle: 'TimePrice zapnutý',
     globalToggleHint: 'Na webech uvidíš čas místo cen.',
     globalOffHint: 'Vypnuto — ceny se nepřevádějí nikde.',
-    // Hover-swap direction toggle (task 20). On = show prices, reveal time on hover.
+    // Price-first mode toggle (task 20/21). On = show prices, time in the hover tooltip.
     invertToggle: 'Zobrazovat ceny (čas na hover)',
     invertOnHint: 'Web ukáže ceny v Kč; čas se objeví po najetí myší.',
     invertOffHint: 'Web ukáže čas; původní cena se objeví po najetí myší.',
